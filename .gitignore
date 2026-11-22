@@ -1,0 +1,70 @@
+# ==============================================================================
+# Pocket Brew — Git Ignore Configuration
+# Memastikan tidak ada rahasia (keystore/env/sertifikat) atau file sampah build
+# yang bocor ke repository GitHub.
+# ==============================================================================
+
+# Miscellaneous & OS
+*.class
+*.log
+*.pyc
+*.swp
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IDE & Editor (IntelliJ / Android Studio / VS Code)
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Flutter / Dart / Pub Build & Cache
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+.widget_preview/
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Android Build & Local SDK Config
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle/
+/android/captures/
+/android/gradlew
+/android/gradlew.bat
+/android/local.properties
+**/GeneratedPluginRegistrant.java
+
+# Security: Keystores, Signing Keys, Certificates & Environment Secrets (WAJIB AMAN)
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+/android/key.properties
+.env
+.env.*
+!.env.example
+!/android/key.properties.example

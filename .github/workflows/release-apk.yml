@@ -1,0 +1,98 @@
+name: Build & Release Android APK
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Test, Build APK & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run static analysis
+        run: flutter analyze
+
+      - name: Run unit & widget tests
+        run: flutter test
+
+      - name: Decode Release Keystore (if configured in GitHub Secrets)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.POCKET_BREW_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.POCKET_BREW_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.POCKET_BREW_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.POCKET_BREW_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            cat <<EOF > android/key.properties
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+            echo "Release keystore berhasil dimuat dari GitHub Secrets."
+          else
+            echo "GitHub Secrets keystore belum diisi; menggunakan fallback signing."
+          fi
+
+      - name: Read app version from pubspec.yaml
+        id: version
+        run: |
+          RAW_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | tr -d '\r')
+          VERSION_NAME=$(echo "$RAW_VERSION" | cut -d'+' -f1)
+          BUILD_NUMBER=$(echo "$RAW_VERSION" | cut -d'+' -f2)
+          echo "raw=$RAW_VERSION" >> $GITHUB_OUTPUT
+          echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "build=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build Release APK
+        run: |
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk "pocket-brew-v${{ steps.version.outputs.name }}.apk"
+
+      - name: Upload APK Artifact to Workflow Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocket-brew-v${{ steps.version.outputs.name }}-apk
+          path: pocket-brew-v${{ steps.version.outputs.name }}.apk
+          if-no-files-found: error
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Pocket Brew v${{ steps.version.outputs.name }} (Build ${{ steps.version.outputs.build }})"
+          files: pocket-brew-v${{ steps.version.outputs.name }}.apk
+          generate_release_notes: true
+          body: |
+            ### Pocket Brew v${{ steps.version.outputs.name }} (Build ${{ steps.version.outputs.build }})
+            - **Download APK:** Unduh file **`pocket-brew-v${{ steps.version.outputs.name }}.apk`** di bawah bagian *Assets*.
+            - **Cara Update (Tanpa Hilang Data):** Langsung buka & install file `.apk` di atas aplikasi Pocket Brew lama (jangan di-uninstall dulu). Seluruh data biji kopi, riwayat seduhan, resep, dan alat seduh otomatis aman.
+            - Lihat rincian perubahan lengkap di [CHANGELOG.md](CHANGELOG.md).

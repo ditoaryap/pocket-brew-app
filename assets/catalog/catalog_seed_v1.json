@@ -1,0 +1,430 @@
+{
+  "catalog_version": "1.0.0",
+  "updated_at": "2026-11-22",
+  "grinders": [
+    {
+      "id": "comandante-c40-mk4",
+      "brand": "Comandante",
+      "model": "C40 MK4",
+      "um_per_click": 30.0,
+      "clicks_per_rev": 12,
+      "min_click": 10,
+      "max_click": 36,
+      "v60_hot_min": 20,
+      "v60_hot_max": 26,
+      "v60_hot_default": 23,
+      "zero_point_note": "Burr rapat ringan (0 klik)",
+      "burr_spec": "38mm High-Nitrogen Steel",
+      "is_official": true
+    },
+    {
+      "id": "comandante-c40-redclix",
+      "brand": "Comandante",
+      "model": "C40 Red Clix",
+      "um_per_click": 15.0,
+      "clicks_per_rev": 24,
+      "min_click": 20,
+      "max_click": 72,
+      "v60_hot_min": 42,
+      "v60_hot_max": 52,
+      "v60_hot_default": 46,
+      "zero_point_note": "Axle halus Red Clix (0 klik)",
+      "burr_spec": "38mm High-Nitrogen Steel",
+      "is_official": true
+    },
+    {
+      "id": "1zpresso-jx",
+      "brand": "1Zpresso",
+      "model": "JX",
+      "um_per_click": 25.0,
+      "clicks_per_rev": 30,
+      "min_click": 30,
+      "max_click": 90,
+      "v60_hot_min": 58,
+      "v60_hot_max": 68,
+      "v60_hot_default": 62,
+      "zero_point_note": "Internal dial (1 putaran = 30 klik)",
+      "burr_spec": "48mm Stainless Heptagonal",
+      "is_official": true
+    },
+    {
+      "id": "1zpresso-k-ultra",
+      "brand": "1Zpresso",
+      "model": "K-Ultra",
+      "um_per_click": 20.0,
+      "clicks_per_rev": 100,
+      "min_click": 40,
+      "max_click": 100,
+      "v60_hot_min": 72,
+      "v60_hot_max": 86,
+      "v60_hot_default": 78,
+      "zero_point_note": "External ring 0–9.9 (100 klik/putaran)",
+      "burr_spec": "48mm K-Burr Heptagonal",
+      "is_official": true
+    },
+    {
+      "id": "1zpresso-zp6-special",
+      "brand": "1Zpresso",
+      "model": "ZP6 Special",
+      "um_per_click": 22.0,
+      "clicks_per_rev": 90,
+      "min_click": 20,
+      "max_click": 75,
+      "v60_hot_min": 44,
+      "v60_hot_max": 54,
+      "v60_hot_default": 48,
+      "zero_point_note": "External dial 0–9.0 (high clarity filter burr)",
+      "burr_spec": "48mm Unimodal Filter Burr",
+      "is_official": true
+    },
+    {
+      "id": "timemore-c3s",
+      "brand": "Timemore",
+      "model": "Chestnut C3S",
+      "um_per_click": 83.0,
+      "clicks_per_rev": 12,
+      "min_click": 8,
+      "max_click": 24,
+      "v60_hot_min": 14,
+      "v60_hot_max": 18,
+      "v60_hot_default": 16,
+      "zero_point_note": "Putar searah jarum jam mentok = 0",
+      "burr_spec": "38mm S2C 660 Steel",
+      "is_official": true
+    },
+    {
+      "id": "timemore-chestnut-s3",
+      "brand": "Timemore",
+      "model": "Chestnut S3",
+      "um_per_click": 15.0,
+      "clicks_per_rev": 90,
+      "min_click": 25,
+      "max_click": 85,
+      "v60_hot_min": 52,
+      "v60_hot_max": 64,
+      "v60_hot_default": 58,
+      "zero_point_note": "External ring 0–9 (10 klik per angka)",
+      "burr_spec": "42mm S2C 890 High-Precision",
+      "is_official": true
+    },
+    {
+      "id": "kingrinder-k6",
+      "brand": "KINGrinder",
+      "model": "K6",
+      "um_per_click": 16.0,
+      "clicks_per_rev": 60,
+      "min_click": 55,
+      "max_click": 125,
+      "v60_hot_min": 88,
+      "v60_hot_max": 102,
+      "v60_hot_default": 95,
+      "zero_point_note": "External dial (60 klik/putaran)",
+      "burr_spec": "48mm Heptagonal Steel",
+      "is_official": true
+    },
+    {
+      "id": "kinu-m47",
+      "brand": "Kinu",
+      "model": "M47 Simplicity",
+      "um_per_click": 20.0,
+      "clicks_per_rev": 50,
+      "min_click": 18,
+      "max_click": 55,
+      "v60_hot_min": 32,
+      "v60_hot_max": 42,
+      "v60_hot_default": 36,
+      "zero_point_note": "Stepless micrometer (50 divisi/putaran)",
+      "burr_spec": "47mm Black Fusion Conical",
+      "is_official": true
+    },
+    {
+      "id": "fellow-ode-gen2",
+      "brand": "Fellow",
+      "model": "Ode Brew Gen 2",
+      "um_per_click": 95.0,
+      "clicks_per_rev": 31,
+      "min_click": 1,
+      "max_click": 31,
+      "v60_hot_min": 12,
+      "v60_hot_max": 18,
+      "v60_hot_default": 15,
+      "zero_point_note": "31 step listrik (1.0 s/d 11.0, 3 step/angka)",
+      "burr_spec": "64mm Gen 2 Flat Burr",
+      "is_official": true
+    }
+  ],
+  "drippers": [
+    {
+      "id": "hario-v60-02-plastic",
+      "name": "Hario V60-02 Plastik",
+      "geometry": "Cone 60°",
+      "material": "AS Resin (Panas Stabil)",
+      "capacity_g": "15–30g",
+      "flow_note": "Paling cepat & hemat panas, ideal harian."
+    },
+    {
+      "id": "hario-v60-01-ceramic",
+      "name": "Hario V60-01 Keramik",
+      "geometry": "Cone 60°",
+      "material": "Arita Porcelain",
+      "capacity_g": "10–18g",
+      "flow_note": "Wajib preheat air panas lebih lama."
+    },
+    {
+      "id": "hario-switch-200",
+      "name": "Hario Switch SSD-200",
+      "geometry": "Cone 60° + Valve",
+      "material": "Borosilicate Glass",
+      "capacity_g": "12–22g",
+      "flow_note": "Bisa perkulasi murni atau hybrid immersion."
+    },
+    {
+      "id": "kalita-wave-185",
+      "name": "Kalita Wave 185",
+      "geometry": "Flat-Bottom 3 Lubang",
+      "material": "Stainless Steel",
+      "capacity_g": "15–28g",
+      "flow_note": "Body lebih bulat, ramah untuk pemula."
+    },
+    {
+      "id": "origami-m",
+      "name": "Origami Dripper M",
+      "geometry": "20-Rib Cone",
+      "material": "Mino Porcelain / Air",
+      "capacity_g": "15–26g",
+      "flow_note": "Aliran super lega, cocok filter cone atau wave."
+    }
+  ],
+  "filters": [
+    {
+      "id": "hario-vcf-02w-japan",
+      "name": "Hario VCF-02W Japan Tabbed",
+      "speed": "Sedang",
+      "grind_offset_um": 0,
+      "note": "Standar V60 harian, seimbang antara clarity dan body."
+    },
+    {
+      "id": "cafec-abaca-02",
+      "name": "Cafec Abaca 02",
+      "speed": "Cepat",
+      "grind_offset_um": -25,
+      "note": "Serat abaca mengalir cepat & jarang mampet, cocok gilingan halus."
+    },
+    {
+      "id": "cafec-t90",
+      "name": "Cafec T-90 Medium-Dark",
+      "speed": "Sangat Cepat",
+      "grind_offset_um": -35,
+      "note": "Paling lega untuk biji Ethiopia/Kenya yang banyak fines."
+    },
+    {
+      "id": "cafec-t92",
+      "name": "Cafec T-92 Light Roast",
+      "speed": "Lambat",
+      "grind_offset_um": 40,
+      "note": "Menahan aliran lebih lama untuk meningkatkan ekstraksi."
+    },
+    {
+      "id": "hario-holland",
+      "name": "Hario Holland (Unboxed 100)",
+      "speed": "Agak Lambat",
+      "grind_offset_um": 30,
+      "note": "Kertas lebih tebal, giling 1 klik lebih kasar dari Japan."
+    }
+  ],
+  "recipes": [
+    {
+      "id": "hoffmann-1cup-hot",
+      "name": "James Hoffmann · Better 1-Cup",
+      "author": "James Hoffmann",
+      "mode": "hot",
+      "badge": "Hot V60",
+      "is_official": true,
+      "summary": "5 tuangan merata, suhu tinggi, profil ekstraksi bersih & manis seimbang.",
+      "dose_g": 15.0,
+      "ratio": 16.67,
+      "water_g": 250.0,
+      "ice_ratio": 0.0,
+      "iced_method": "ice_first",
+      "temp_c": 94,
+      "target_drawdown_sec": 180,
+      "grind_offset_um": 0,
+      "stages": [
+        {"order": 1, "label": "Bloom + Swirl", "start_sec": 0, "pour_end_sec": 12, "end_sec": 45, "target_cumulative_pct": 0.20, "pattern": "spiral", "rate": "medium", "cue": "Basahi seluruh bubuk rata lalu putar (swirl) lembut 2x."},
+        {"order": 2, "label": "Tuangan Utama 1", "start_sec": 45, "pour_end_sec": 60, "end_sec": 70, "target_cumulative_pct": 0.40, "pattern": "spiral", "rate": "medium", "cue": "Tuang melingkar tenang di tengah untuk menaikkan suhu bed."},
+        {"order": 3, "label": "Tuangan 2 · Spiral", "start_sec": 70, "pour_end_sec": 80, "end_sec": 90, "target_cumulative_pct": 0.60, "pattern": "spiral", "rate": "medium", "cue": "Jaga ketinggian air stabil di setengah tinggi kerucut."},
+        {"order": 4, "label": "Tuangan 3 · Spiral", "start_sec": 90, "pour_end_sec": 100, "end_sec": 110, "target_cumulative_pct": 0.80, "pattern": "spiral", "rate": "medium", "cue": "Hindari menyiram dinding kertas filter langsung."},
+        {"order": 5, "label": "Finishing + Rao Spin", "start_sec": 110, "pour_end_sec": 122, "end_sec": 180, "target_cumulative_pct": 1.00, "pattern": "swirl", "rate": "slow", "cue": "Akhiri di pusat lalu putar dripper 1x agar bed kopi rata."}
+      ]
+    },
+    {
+      "id": "kasuya-46-hot",
+      "name": "Tetsu Kasuya · 4:6 Method",
+      "author": "Tetsu Kasuya",
+      "mode": "hot",
+      "badge": "Hot V60",
+      "is_official": true,
+      "summary": "Gilingan lebih kasar (+180 μm); 40% awal atur rasa asam/manis, 60% akhir atur body.",
+      "dose_g": 16.0,
+      "ratio": 15.0,
+      "water_g": 240.0,
+      "ice_ratio": 0.0,
+      "iced_method": "ice_first",
+      "temp_c": 92,
+      "target_drawdown_sec": 215,
+      "grind_offset_um": 180,
+      "stages": [
+        {"order": 1, "label": "40% · Tuangan Asam/Manis 1", "start_sec": 0, "pour_end_sec": 12, "end_sec": 45, "target_cumulative_pct": 0.17, "pattern": "spiral", "rate": "medium", "cue": "Porsi pertama lebih kecil untuk rasa lebih manis."},
+        {"order": 2, "label": "40% · Tuangan Manis 2", "start_sec": 45, "pour_end_sec": 58, "end_sec": 90, "target_cumulative_pct": 0.40, "pattern": "spiral", "rate": "medium", "cue": "Tunggu air turun hampir kering sebelum tuangan ini."},
+        {"order": 3, "label": "60% · Kekuatan 1", "start_sec": 90, "pour_end_sec": 102, "end_sec": 135, "target_cumulative_pct": 0.60, "pattern": "pulse", "rate": "medium", "cue": "Tuang merata setelah permukaan bed mulai terlihat."},
+        {"order": 4, "label": "60% · Kekuatan 2", "start_sec": 135, "pour_end_sec": 148, "end_sec": 175, "target_cumulative_pct": 0.80, "pattern": "pulse", "rate": "medium", "cue": "Jaga aliran tetap tenang tanpa banyak turbulensi."},
+        {"order": 5, "label": "60% · Penutup", "start_sec": 175, "pour_end_sec": 188, "end_sec": 215, "target_cumulative_pct": 1.00, "pattern": "center", "rate": "slow", "cue": "Biarkan menetes selesai sempurna di ~3:30."}
+      ]
+    },
+    {
+      "id": "hoffmann-japanese-iced",
+      "name": "James Hoffmann · Japanese Iced",
+      "author": "James Hoffmann",
+      "mode": "iced",
+      "badge": "Japanese",
+      "is_official": true,
+      "summary": "Rasio 1:15.3 · 60% air panas & 40% es batu, giling lebih halus (-90 μm) untuk aroma floral segar.",
+      "dose_g": 15.0,
+      "ratio": 15.33,
+      "water_g": 230.0,
+      "ice_ratio": 0.40,
+      "iced_method": "ice_first",
+      "temp_c": 96,
+      "target_drawdown_sec": 145,
+      "grind_offset_um": -90,
+      "stages": [
+        {"order": 1, "label": "Bloom Pekat + Swirl", "start_sec": 0, "pour_end_sec": 12, "end_sec": 45, "target_cumulative_pct": 0.33, "pattern": "spiral", "rate": "medium", "cue": "Bloom dengan ~3x berat kopi agar ekstraksi awal optimal."},
+        {"order": 2, "label": "Tuangan Utama 1", "start_sec": 45, "pour_end_sec": 62, "end_sec": 85, "target_cumulative_pct": 0.68, "pattern": "spiral", "rate": "medium", "cue": "Tuang spiral stabil di tengah, jaga suhu panas."},
+        {"order": 3, "label": "Tuangan Penutup + Swirl", "start_sec": 85, "pour_end_sec": 100, "end_sec": 145, "target_cumulative_pct": 1.00, "pattern": "swirl", "rate": "slow", "cue": "Putar dripper lembut lalu biarkan konsentrat turun tuntas."}
+      ]
+    },
+    {
+      "id": "hedrick-121-hot",
+      "name": "Lance Hedrick · 1-2-1 Double Bloom",
+      "author": "Lance Hedrick",
+      "mode": "hot",
+      "badge": "Hot V60",
+      "is_official": true,
+      "summary": "Bloom panjang (2 menit) + 1 tuangan besar berenergi tinggi, cocok untuk light roast padat.",
+      "dose_g": 15.0,
+      "ratio": 16.0,
+      "water_g": 240.0,
+      "ice_ratio": 0.0,
+      "iced_method": "ice_first",
+      "temp_c": 96,
+      "target_drawdown_sec": 175,
+      "grind_offset_um": 30,
+      "stages": [
+        {"order": 1, "label": "Long Bloom (3x Dosis)", "start_sec": 0, "pour_end_sec": 12, "end_sec": 90, "target_cumulative_pct": 0.19, "pattern": "spiral", "rate": "fast", "cue": "Gunakan aliran cepat di awal lalu diamkan 90 detik penuh."},
+        {"order": 2, "label": "Single High-Flow Pour", "start_sec": 90, "pour_end_sec": 115, "end_sec": 175, "target_cumulative_pct": 1.00, "pattern": "spiral", "rate": "fast", "cue": "Tuang kontinyu sampai target total lalu akhiri dengan swirl ringan."}
+      ]
+    },
+    {
+      "id": "scott-rao-v60",
+      "name": "Scott Rao · Updated V60",
+      "author": "Scott Rao",
+      "mode": "hot",
+      "badge": "Hot V60",
+      "is_official": true,
+      "summary": "Suhu tinggi 97°C + 2 tuangan utama dengan Rao Spin presisi untuk ekstraksi seragam.",
+      "dose_g": 18.0,
+      "ratio": 16.5,
+      "water_g": 297.0,
+      "ice_ratio": 0.0,
+      "iced_method": "ice_first",
+      "temp_c": 97,
+      "target_drawdown_sec": 195,
+      "grind_offset_um": -15,
+      "stages": [
+        {"order": 1, "label": "Bloom + Excavate/Swirl", "start_sec": 0, "pour_end_sec": 12, "end_sec": 45, "target_cumulative_pct": 0.18, "pattern": "spiral", "rate": "medium", "cue": "Basahi 3x berat kopi lalu goyang rata tanpa gumpalan."},
+        {"order": 2, "label": "Main Pour 1 + Spin", "start_sec": 45, "pour_end_sec": 75, "end_sec": 105, "target_cumulative_pct": 0.60, "pattern": "spiral", "rate": "medium", "cue": "Tuang hingga 60% total lalu lakukan Rao Spin lembut."},
+        {"order": 3, "label": "Main Pour 2 + Final Spin", "start_sec": 105, "pour_end_sec": 132, "end_sec": 195, "target_cumulative_pct": 1.00, "pattern": "swirl", "rate": "medium", "cue": "Lanjutkan sampai 100%, spin 1x dan tunggu drawdown mulus."}
+      ]
+    },
+    {
+      "id": "cafec-osmotic-flow",
+      "name": "Cafec · Osmotic Flow",
+      "author": "Cafec Japan",
+      "mode": "hot",
+      "badge": "Hot V60",
+      "is_official": true,
+      "summary": "Suhu rendah 83°C & aliran pusat lembut; manis pekat rendah pahit untuk medium–dark roast.",
+      "dose_g": 18.0,
+      "ratio": 12.5,
+      "water_g": 225.0,
+      "ice_ratio": 0.0,
+      "iced_method": "ice_first",
+      "temp_c": 83,
+      "target_drawdown_sec": 165,
+      "grind_offset_um": 90,
+      "stages": [
+        {"order": 1, "label": "Center Dome Bloom", "start_sec": 0, "pour_end_sec": 20, "end_sec": 45, "target_cumulative_pct": 0.22, "pattern": "osmotic", "rate": "slow", "cue": "Teteskan pelan di tengah sampai kubah kopi mengembang."},
+        {"order": 2, "label": "Osmotic Center Pour 1", "start_sec": 45, "pour_end_sec": 85, "end_sec": 100, "target_cumulative_pct": 0.65, "pattern": "osmotic", "rate": "slow", "cue": "Tuang tipis seukuran koin tepat di pusat tanpa merusak dinding bubuk."},
+        {"order": 3, "label": "Final Gentle Center", "start_sec": 100, "pour_end_sec": 130, "end_sec": 165, "target_cumulative_pct": 1.00, "pattern": "center", "rate": "slow", "cue": "Angkat dripper tepat saat mencapai target agar tidak over-extract."}
+      ]
+    }
+  ],
+  "guides": [
+    {
+      "id": "brew-basics",
+      "title": "Dasar Seduh: Rasio, Gilingan & Suhu",
+      "subtitle": "Wajib Pemula · Pondasi V60 & Iced",
+      "read_minutes": 3,
+      "tags": ["Rasio 1:15–1:17", "Ukuran Gilingan", "Suhu & Bloom"],
+      "category": "basics"
+    },
+    {
+      "id": "pour-technique",
+      "title": "Teknik Penuangan (Diagram Animasi)",
+      "subtitle": "Spiral · Center · Osmotic · Rao Spin",
+      "read_minutes": 4,
+      "tags": ["Spiral ~60 ml/10 dtk", "Center Flow", "Rao Spin"],
+      "category": "pour"
+    },
+    {
+      "id": "taste-troubleshoot",
+      "title": "Perbaiki Rasa: Asam vs Pahit",
+      "subtitle": "Panduan Cepat · Diagnosa Rasa di Lidah",
+      "read_minutes": 3,
+      "tags": ["Asam / Encer", "Pahit / Sepat", "Air Mampet"],
+      "category": "troubleshoot"
+    },
+    {
+      "id": "beans-origins",
+      "title": "Karakter Biji & Daerah Asal",
+      "subtitle": "Origin · Washed vs Natural vs Honey",
+      "read_minutes": 3,
+      "tags": ["Ethiopia", "Kenya", "Colombia", "Gayo / Rempah"],
+      "category": "beans"
+    },
+    {
+      "id": "water-storage",
+      "title": "Kualitas Air & Penyimpanan Biji",
+      "subtitle": "98% Kopi Adalah Air · Masa Resting Biji",
+      "read_minutes": 2,
+      "tags": ["Air Mineral 75–150 ppm", "Resting Biji", "Simpan Kedap"],
+      "category": "water"
+    },
+    {
+      "id": "dripper-types",
+      "title": "Mengenal Jenis & Bahan Dripper",
+      "subtitle": "V60 Cone · Switch · Kalita Flat · Origami",
+      "read_minutes": 3,
+      "tags": ["Cone 60°", "Flat-Bottom", "Plastik vs Keramik"],
+      "category": "dripper"
+    },
+    {
+      "id": "paper-filters",
+      "title": "Jenis Kertas Filter & Aliran Air",
+      "subtitle": "Hario · Cafec Abaca · T-90 · T-92",
+      "read_minutes": 2,
+      "tags": ["Aliran Cepat", "Aliran Lambat", "Bilas Filter"],
+      "category": "filter"
+    }
+  ]
+}

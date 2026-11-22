@@ -1,0 +1,6 @@
+# Copy file ini menjadi `android/key.properties` (jangan di-commit ke GitHub!)
+# Supaya setiap build APK selalu memakai 1 tanda tangan tetap (in-place update tanpa hilang data).
+storePassword=GANTI_PASSWORD_KEYSTORE
+keyPassword=GANTI_PASSWORD_KEY
+keyAlias=pocketbrew
+storeFile=upload-keystore.jks

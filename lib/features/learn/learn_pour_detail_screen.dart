@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/widgets/canvas/spiral_pour_diagram.dart';
 import '../../core/widgets/pocket_card.dart';
 
-/// Screen 20 · Detail Teknik Penuangan (Interactive Animated Canvas Diagram + 3 Pour Techniques).
+/// Screen 20 · Detail Teknik Penuangan (Interactive 60fps Animated Stage for all 5 Pour Patterns).
 class LearnPourDetailScreen extends StatefulWidget {
   const LearnPourDetailScreen({super.key});
 
@@ -28,7 +30,7 @@ class _LearnPourDetailScreenState extends State<LearnPourDetailScreen> {
               title: 'Teknik Penuangan',
               onBack: () => context.pop(),
               trailing: PocketPill(
-                label: 'Animasi',
+                label: '5 Pola · Animasi',
                 icon: Icons.play_circle_outline_rounded,
                 backgroundColor: c.tintTerracotta,
                 foregroundColor: c.brandTerracottaInk,
@@ -38,197 +40,292 @@ class _LearnPourDetailScreenState extends State<LearnPourDetailScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(18, 4, 18, 20),
                 children: [
-                  // Dark Animated Visual Stage Card
+                  // Interactive 5-Technique Selector Strip
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: PourDemoType.values.map((t) {
+                        final active = _selected == t;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: PocketPill(
+                            label: t.shortLabel,
+                            height: 34,
+                            fontSize: 12.2,
+                            fontWeight: 700,
+                            padding: const EdgeInsets.symmetric(horizontal: 13),
+                            backgroundColor:
+                                active ? c.brandEspresso : c.surfaceElevated,
+                            foregroundColor:
+                                active ? c.textOnAccent : c.textSecondary,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() {
+                                _selected = t;
+                                _playing = true;
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Studio Animated Stage Card (Responsive centered layout!)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1F1915),
+                      color: const Color(0xFF1A1512),
                       borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: const Color(0xFF332923)),
                     ),
-                    child: Row(
+                    child: Column(
                       children: [
                         SpiralPourDiagram(
                           type: _selected,
                           isPlaying: _playing,
+                          size: 164,
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _selected.title,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFFFFFDF9),
+                        const SizedBox(height: 12),
+                        Text(
+                          _selected.title,
+                          textAlign: TextAlign.center,
+                          style: PocketTheme.ui(
+                            size: 16,
+                            weight: 800,
+                            color: const Color(0xFFFAF5EE),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2B221D),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            _selected.paceBadge,
+                            style: PocketTheme.mono(
+                              size: 11,
+                              weight: FontWeight.w700,
+                              color: const Color(0xFFE48F6E),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _selected.caption,
+                          textAlign: TextAlign.center,
+                          style: PocketTheme.ui(
+                            size: 12.5,
+                            height: 1.48,
+                            color: const Color(0xFFD0C5B9),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        PocketPill(
+                          label: _playing ? 'Jeda Animasi' : 'Putar Animasi',
+                          icon: _playing
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          height: 34,
+                          backgroundColor: const Color(0xFFC05E3A),
+                          foregroundColor: const Color(0xFFFFFDF9),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _playing = !_playing);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Detailed Breakdown for Selected Technique
+                  PocketCard(
+                    padding: const EdgeInsets.all(15),
+                    radius: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Langkah Praktik · ${_selected.shortLabel}',
+                          style: PocketTheme.ui(
+                            size: 14,
+                            weight: 800,
+                            color: c.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ...List.generate(_selected.howToSteps.length, (i) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom:
+                                  i < _selected.howToSteps.length - 1 ? 8 : 0,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  margin: const EdgeInsets.only(top: 1),
+                                  decoration: BoxDecoration(
+                                    color: c.tintTerracotta,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '${i + 1}',
+                                    style: PocketTheme.mono(
+                                      size: 11,
+                                      weight: FontWeight.w800,
+                                      color: c.brandTerracottaInk,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                _selected.caption,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  height: 1.45,
-                                  color: Color(0xFFBFB3A6),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _selected.howToSteps[i],
+                                    style: PocketTheme.ui(
+                                      size: 13,
+                                      weight: 500,
+                                      height: 1.45,
+                                      color: c.textPrimary,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 10),
-                              PocketPill(
-                                label: _playing
-                                    ? 'Jeda Animasi'
-                                    : 'Putar Animasi',
-                                icon: _playing
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                backgroundColor: c.brandTerracotta,
-                                foregroundColor: const Color(0xFFFFFDF9),
-                                onTap: () =>
-                                    setState(() => _playing = !_playing),
-                              ),
-                            ],
+                              ],
+                            ),
+                          );
+                        }),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 11),
+                          child: Divider(),
+                        ),
+                        Text(
+                          'Efek Rasa: ${_selected.tasteEffect}',
+                          style: PocketTheme.ui(
+                            size: 12.8,
+                            weight: 700,
+                            height: 1.4,
+                            color: c.brandSage,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Cocok untuk: ${_selected.bestFor}',
+                          style: PocketTheme.ui(
+                            size: 12.4,
+                            weight: 500,
+                            height: 1.4,
+                            color: c.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 14),
-
-                  // 3 Interactive Technique Cards
-                  _TechniqueCard(
-                    title: '1. Spiral Pelan (Merata)',
-                    badge: 'Sedang · ~60 ml/10 dtk',
-                    badgeBg: c.tintTerracotta,
-                    badgeFg: c.brandTerracottaInk,
-                    desc:
-                        'Jaga aliran tetap stabil (~60 ml tiap 10 detik) dan tidak terlalu tinggi supaya ekstraksi paling rata dan jernih.',
-                    selected: _selected == PourDemoType.spiral,
-                    onTap: () => setState(() {
-                      _selected = PourDemoType.spiral;
-                      _playing = true;
-                    }),
-                  ),
                   const SizedBox(height: 10),
-                  _TechniqueCard(
-                    title: '2. Center / Osmotic Flow',
-                    badge: 'Pelan · ~30 ml/10 dtk',
-                    badgeBg: c.tintHoney,
-                    badgeFg: c.brandHoney,
-                    desc:
-                        'Tuang tipis & pelan (~30 ml tiap 10 detik) tepat di pusat gundukan kopi, menjaga kubah tetap utuh untuk rasa manis & body penuh.',
-                    selected: _selected == PourDemoType.centerOsmotic,
-                    onTap: () => setState(() {
-                      _selected = PourDemoType.centerOsmotic;
-                      _playing = true;
-                    }),
-                  ),
-                  const SizedBox(height: 10),
-                  _TechniqueCard(
-                    title: '3. Rao Spin (Goyang Ringan)',
-                    badge: '1x putaran pelan',
-                    badgeBg: c.tintSage,
-                    badgeFg: c.brandSage,
-                    desc:
-                        'Putar dripper lembut 1x setelah tuangan terakhir agar ampas kopi datar sempurna tanpa jalur bocor (channeling).',
-                    selected: _selected == PourDemoType.raoSpin,
-                    onTap: () => setState(() {
-                      _selected = PourDemoType.raoSpin;
-                      _playing = true;
-                    }),
-                  ),
-                  const SizedBox(height: 12),
 
                   PocketCard(
                     backgroundColor: c.tintHoney,
                     borderColor: Colors.transparent,
-                    padding: const EdgeInsets.all(13),
+                    elevated: false,
+                    padding: const EdgeInsets.all(14),
                     child: Text(
-                      'Tip penting: hindari menyiram langsung dinding kertas filter — air bisa lolos ke server tanpa mengekstrak kopi (bypass), bikin rasa jadi encer.',
-                      style: TextStyle(
-                        fontSize: 12,
+                      'Tip Penting: ${_selected.watchOut}',
+                      style: PocketTheme.ui(
+                        size: 12.6,
                         height: 1.45,
-                        fontWeight: FontWeight.w600,
+                        weight: 600,
                         color: c.textPrimary,
                       ),
                     ),
                   ),
+                  const SizedBox(height: 14),
+
+                  // Quick overview cards for all 5 techniques (tap to jump animation)
+                  const PocketSectionHeader(title: 'Ringkasan 5 Pola Tuangan'),
+                  const SizedBox(height: 8),
+                  ...PourDemoType.values.map((t) {
+                    final sel = t == _selected;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 9),
+                      child: PocketCard(
+                        borderColor: sel ? c.brandTerracotta : c.borderSubtle,
+                        borderWidth: sel ? 1.5 : 1.0,
+                        elevated: false,
+                        padding: const EdgeInsets.all(13),
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _selected = t;
+                            _playing = true;
+                          });
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    t.title,
+                                    style: PocketTheme.ui(
+                                      size: 13.5,
+                                      weight: 800,
+                                      color: sel
+                                          ? c.brandTerracottaInk
+                                          : c.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                PocketPill(
+                                  label: t.shortLabel,
+                                  height: 22,
+                                  fontSize: 10.5,
+                                  backgroundColor: sel
+                                      ? c.tintTerracotta
+                                      : c.surfaceElevated,
+                                  foregroundColor: sel
+                                      ? c.brandTerracottaInk
+                                      : c.textSecondary,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              t.tasteEffect,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 6, 18, 14),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: c.brandTerracotta,
-                    foregroundColor: c.textOnAccent,
-                  ),
-                  onPressed: () => context.go('/brew'),
-                  icon: const Icon(Icons.local_cafe_rounded, size: 19),
-                  label: const Text('Praktikkan di Brew'),
-                ),
+              child: PocketButton(
+                label: 'Praktikkan di Brew',
+                icon: Icons.local_cafe_rounded,
+                backgroundColor: c.brandTerracotta,
+                foregroundColor: c.textOnAccent,
+                height: 50,
+                onTap: () => context.go('/brew'),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _TechniqueCard extends StatelessWidget {
-  const _TechniqueCard({
-    required this.title,
-    required this.badge,
-    required this.badgeBg,
-    required this.badgeFg,
-    required this.desc,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String badge;
-  final Color badgeBg;
-  final Color badgeFg;
-  final String desc;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return PocketCard(
-      borderColor: selected ? badgeFg : c.borderSubtle,
-      padding: const EdgeInsets.all(14),
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              PocketPill(
-                label: badge,
-                backgroundColor: badgeBg,
-                foregroundColor: badgeFg,
-                fontSize: 10.5,
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(desc, style: Theme.of(context).textTheme.bodySmall),
-        ],
       ),
     );
   }

@@ -18,6 +18,29 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/id-ID/1.0.0/) 
 
 ---
 
+## [1.0.3+4] - 2026-11-23
+### Ditambahkan (Added)
+- **Panduan Animasi 5 Teknik Tuangan (`Info Pola`)**:
+  - Menambahkan tombol **Info Pola** di samping pemilih pola tuangan (pada layar Brew, Edit Tahapan, dan Timer Seduh) yang membuka panduan animasi interaktif untuk seluruh 5 teknik tuangan (**Spiral**, **Tengah**, **Pulse**, **Osmotic Flow**, dan **Swirl**) lengkap dengan langkah praktik, efek rasa, dan hal yang perlu dihindari.
+  - Memperbarui materi **Teknik Tuang & Pola Air** di halaman **Belajar Seduh** agar mencakup kelima pola secara lengkap.
+- **Materi Roda Rasa Kopi (SCA Flavor Wheel) di Belajar Seduh**:
+  - Menambahkan panduan **Roda Rasa Kopi (SCA)** di menu **Belajar Seduh** (total kini 8 materi) dengan roda interaktif 9 kategori, pencarian catatan rasa cepat, kartu sub-kategori, dan panduan 3 langkah cara membaca rasa kopi untuk pemula.
+- **Pemulihan Preset Bawaan Terpusat di Pengaturan**:
+  - Menambahkan bagian **Pulihkan Preset Bawaan Aplikasi** di halaman **Pengaturan** dengan rincian jelas jumlah Grinder, Dripper, Filter, dan Metode Resep bawaan yang akan dikembalikan tanpa menghapus data pribadi pengguna.
+
+### Diubah / Disempurnakan (Changed)
+- **Redesign Welcome Screen Minimalis**:
+  - Menghapus teks pembuka yang berlebihan pada layar masuk dan menampilkan animasi logo **Pocket Brew** yang bersih, tenang, dan konsisten di mode Terang maupun Gelap.
+- **Alur Setup Awal Pengguna Baru (`Onboarding`)**:
+  - Pengguna yang baru pertama kali memasang aplikasi (atau setelah melakukan **Hapus Data**) kini diarahkan melewati **Setup Awal** untuk memilih satuan, grinder, dan dripper sebelum masuk ke Beranda.
+- **Redesign Timer Seduh (`LiveTimerScreen` & `DualPhaseTimerRing`)**:
+  - Memperbesar ukuran angka timer, target timbangan, kartu instruksi aktif, ringkasan setup 2×2, dan daftar tahapan agar mudah terbaca dari jarak meja seduh saat tangan memegang kettle, termasuk pintasan **Lihat Teknik** pola tuangan.
+- **Pembersihan Metode & Resep serta Struktur Repository**:
+  - Menghapus preset demo `V60 Pagi Custom` & `Japanese Iced Sore` serta strip bawah pada tab Resep Profesional agar daftar resep lebih bersih.
+  - Memindahkan tombol pulihkan bawaan dari halaman Alat & Metode ke Pengaturan, membersihkan aset tidak terpakai, memperbarui `.gitignore`, dan merapikan `README.md`.
+
+---
+
 ## [1.0.2+3] - 2026-11-22
 ### Ditambahkan (Added)
 - **Sintesis Audio Native Android (`AudioTrack` PCM Chime)**:

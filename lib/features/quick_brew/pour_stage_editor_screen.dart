@@ -9,6 +9,7 @@ import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/pocket_card.dart';
 import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
+import '../../core/widgets/pour_pattern_guide_sheet.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/brew_recipe_scaler.dart';
 import '../../domain/models/enums.dart';
@@ -1245,11 +1246,43 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                             ],
                                             const SizedBox(height: 10),
 
-                                            Text(
-                                              'Jenis Tuangan',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    'Jenis Tuangan',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                PocketPill(
+                                                  label: 'Info Pola',
+                                                  icon: Icons
+                                                      .info_outline_rounded,
+                                                  iconSize: 13.5,
+                                                  height: 26,
+                                                  fontSize: 10.8,
+                                                  fontWeight: 700,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 9,
+                                                  ),
+                                                  backgroundColor:
+                                                      c.tintTerracotta,
+                                                  foregroundColor:
+                                                      c.brandTerracottaInk,
+                                                  onTap: () =>
+                                                      showPourPatternGuideSheet(
+                                                    context,
+                                                    initialPattern: st.pattern,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                             const SizedBox(height: 6),
                                             Wrap(

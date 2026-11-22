@@ -380,11 +380,19 @@
     },
     {
       "id": "pour-technique",
-      "title": "Teknik Penuangan (Diagram Animasi)",
-      "subtitle": "Spiral · Center · Osmotic · Rao Spin",
+      "title": "Teknik Penuangan (Simulasi Animasi)",
+      "subtitle": "Spiral · Center · Pulse · Osmotic · Swirl",
       "read_minutes": 4,
-      "tags": ["Spiral ~60 ml/10 dtk", "Center Flow", "Rao Spin"],
+      "tags": ["Spiral", "Center & Pulse", "Osmotic", "Rao Spin"],
       "category": "pour"
+    },
+    {
+      "id": "flavor-wheel",
+      "title": "Roda Rasa Kopi (SCA Flavor Wheel)",
+      "subtitle": "9 Kategori Utama · 85+ Notes Rasa Dunia Kopi",
+      "read_minutes": 4,
+      "tags": ["Fruity & Floral", "Sweet & Cocoa", "Spices", "9 Kategori SCA"],
+      "category": "wheel"
     },
     {
       "id": "taste-troubleshoot",

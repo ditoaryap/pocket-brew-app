@@ -394,33 +394,6 @@ class _GearScreenState extends ConsumerState<GearScreen> {
                 },
               ),
             ),
-            if (state.hasDeletedOfficialGear) ...[
-              const SizedBox(height: 10),
-              Center(
-                child: TextButton(
-                  onPressed: () async {
-                    await notifier.restoreDeletedOfficialGear();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Semua alat bawaan berhasil dipulihkan ke koleksi ✓',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(
-                    'Pulihkan Alat Bawaan yang Dihapus',
-                    style: PocketTheme.ui(
-                      size: 12,
-                      weight: 700,
-                      color: c.textTertiary,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),

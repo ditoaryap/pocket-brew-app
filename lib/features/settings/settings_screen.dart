@@ -30,6 +30,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (!_hasChanges) setState(() => _hasChanges = true);
   }
 
+  String _buildDeletedSummaryText(PocketAppState state) {
+    final parts = <String>[];
+    if (state.deletedGrinderIds.isNotEmpty) {
+      parts.add('${state.deletedGrinderIds.length} Grinder');
+    }
+    if (state.deletedDripperIds.isNotEmpty) {
+      parts.add('${state.deletedDripperIds.length} Dripper');
+    }
+    if (state.deletedFilterIds.isNotEmpty) {
+      parts.add('${state.deletedFilterIds.length} Filter');
+    }
+    if (state.deletedRecipeIds.isNotEmpty) {
+      parts.add('${state.deletedRecipeIds.length} Resep bawaan');
+    }
+    return 'Akan dipulihkan: ${parts.join(' · ')}. Data custom & catatanmu tetap aman.';
+  }
+
+  String _buildDeletedDetailBulletList(PocketAppState state) {
+    final lines = <String>[];
+    if (state.deletedGrinderIds.isNotEmpty) {
+      lines.add(
+        '• ${state.deletedGrinderIds.length} Grinder bawaan yang sebelumnya dihapus',
+      );
+    }
+    if (state.deletedDripperIds.isNotEmpty) {
+      lines.add(
+        '• ${state.deletedDripperIds.length} Dripper bawaan yang sebelumnya dihapus',
+      );
+    }
+    if (state.deletedFilterIds.isNotEmpty) {
+      lines.add(
+        '• ${state.deletedFilterIds.length} Kertas Filter bawaan yang sebelumnya dihapus',
+      );
+    }
+    if (state.deletedRecipeIds.isNotEmpty) {
+      lines.add(
+        '• ${state.deletedRecipeIds.length} Resep Profesional bawaan yang sebelumnya dihapus',
+      );
+    }
+    return lines.join('\n');
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -383,6 +425,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
+                                    'Pulihkan Preset Bawaan Aplikasi',
+                                    style: PocketTheme.ui(
+                                      size: 13.5,
+                                      weight: 800,
+                                      color: c.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    state.hasAnyDeletedOfficialItems
+                                        ? _buildDeletedSummaryText(state)
+                                        : 'Semua alat & resep bawaan aplikasi sudah lengkap. Data biji, riwayat, & custom milikmu tidak akan terhapus.',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            PocketPill(
+                              label: state.hasAnyDeletedOfficialItems
+                                  ? 'Pulihkan (${state.totalDeletedOfficialCount})'
+                                  : 'Lengkap ✓',
+                              height: 34,
+                              fontSize: 11.5,
+                              fontWeight: 700,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              backgroundColor: state.hasAnyDeletedOfficialItems
+                                  ? c.tintSage
+                                  : c.surfaceElevated,
+                              foregroundColor: state.hasAnyDeletedOfficialItems
+                                  ? c.brandSage
+                                  : c.textTertiary,
+                              onTap: state.hasAnyDeletedOfficialItems
+                                  ? () async {
+                                      final details =
+                                          _buildDeletedDetailBulletList(state);
+                                      final ok = await showPocketDeleteDialog(
+                                        context,
+                                        title: 'Pulihkan Preset Bawaan?',
+                                        message:
+                                            'Item bawaan aplikasi berikut akan dikembalikan:\n$details\n\nCatatan: Biji kopi, riwayat seduhan, alat custom, dan resep custom milikmu TIDAK akan terhapus.',
+                                        confirmLabel: 'Pulihkan',
+                                        isDestructive: false,
+                                      );
+                                      if (!ok) return;
+                                      await notifier
+                                          .restoreAllDeletedOfficialCatalog();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Semua alat & resep bawaan berhasil dipulihkan ✓',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  : null,
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
                                     'Hapus Semua Data',
                                     style: PocketTheme.ui(
                                       size: 13.5,
@@ -417,7 +535,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   context,
                                   title: 'Hapus Semua Data Lokal?',
                                   message:
-                                      'Seluruh stok biji kopi, catatan riwayat seduhan, resep custom, dan alat tambahan akan dihapus permanen dari HP ini. Preset bawaan akan kembali seperti awal.',
+                                      'Seluruh stok biji kopi, catatan riwayat seduhan, resep custom, dan alat tambahan akan dihapus permanen dari HP ini. Aplikasi akan kembali ke Setup Awal.',
                                   confirmLabel: 'Ya, Hapus Semua',
                                 );
                                 if (!ok) return;
@@ -430,6 +548,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                     ),
                                   );
+                                  context.go('/onboarding');
                                 }
                               },
                             ),

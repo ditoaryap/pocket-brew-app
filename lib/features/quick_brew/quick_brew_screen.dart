@@ -10,6 +10,7 @@ import '../../core/widgets/canvas/click_ruler_widget.dart';
 import '../../core/widgets/pocket_card.dart';
 import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
+import '../../core/widgets/pour_pattern_guide_sheet.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/bean_resting_calculator.dart';
 import '../../domain/engines/brew_recipe_scaler.dart';
@@ -3192,13 +3193,36 @@ class _SessionStageSheetState extends State<_SessionStageSheet> {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              'Pola Tuangan',
-              style: PocketTheme.ui(
-                size: 11.5,
-                weight: 700,
-                color: c.textSecondary,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Pola Tuangan',
+                    style: PocketTheme.ui(
+                      size: 11.5,
+                      weight: 700,
+                      color: c.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PocketPill(
+                  label: 'Info Pola',
+                  icon: Icons.info_outline_rounded,
+                  iconSize: 13.5,
+                  height: 26,
+                  fontSize: 10.8,
+                  fontWeight: 700,
+                  padding: const EdgeInsets.symmetric(horizontal: 9),
+                  backgroundColor: c.tintTerracotta,
+                  foregroundColor: c.brandTerracottaInk,
+                  onTap: () => showPourPatternGuideSheet(
+                    context,
+                    initialPattern: _pattern,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
             Wrap(

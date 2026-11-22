@@ -175,6 +175,15 @@ class PocketAppState {
 
   bool get hasDeletedOfficialRecipes => deletedRecipeIds.isNotEmpty;
 
+  bool get hasAnyDeletedOfficialItems =>
+      hasDeletedOfficialGear || hasDeletedOfficialRecipes;
+
+  int get totalDeletedOfficialCount =>
+      deletedGrinderIds.length +
+      deletedDripperIds.length +
+      deletedFilterIds.length +
+      deletedRecipeIds.length;
+
   bool get hasSessionStageOverrides => draft.sessionStages != null;
 
   int get activeTargetDrawdownSec =>
@@ -513,17 +522,16 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
     final seededBeans = _seedDemoBeans();
     final seededLogs = _seedDemoLogs();
     final seededProfiles = _defaultProfiles();
-    final customDemoRecipes = _seedCustomRecipes();
 
     state = PocketAppState(
       isLoaded: true,
-      prefs: const UserPrefs(onboarded: true),
+      prefs: const UserPrefs(onboarded: false),
       grinders: catalog.grinders,
       drippers: catalog.drippers,
       filters: catalog.filters,
       profiles: seededProfiles,
       activeProfileId: seededProfiles.first.id,
-      recipes: [...catalog.recipes, ...customDemoRecipes],
+      recipes: catalog.recipes,
       beans: seededBeans,
       logs: seededLogs,
       guides: catalog.guides,
@@ -566,126 +574,6 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
           dripperId: 'origami-m',
           filterId: 'cafec-t90',
           kettleNote: 'Pouring Spout Portable',
-        ),
-      ];
-
-  List<BrewRecipe> _seedCustomRecipes() => const [
-        BrewRecipe(
-          id: 'custom-v60-pagi',
-          name: 'V60 Pagi Custom',
-          author: 'Dito',
-          mode: BrewMode.hot,
-          badge: 'Custom',
-          isOfficial: false,
-          summary:
-              '4 tahap · 1:16.5 · Spiral + Center · 94°C · pas untuk biji Ethiopia & Kenya harian.',
-          doseG: 15.0,
-          ratio: 16.5,
-          waterG: 248.0,
-          iceRatio: 0.0,
-          icedMethod: IcedMethod.iceFirst,
-          tempC: 94,
-          targetDrawdownSec: 175,
-          grindOffsetUm: -30,
-          stages: [
-            PourStage(
-              order: 1,
-              label: 'Bloom + Swirl',
-              startSec: 0,
-              pourEndSec: 12,
-              endSec: 45,
-              targetCumulativePct: 0.20,
-              pattern: PourPattern.spiral,
-              rate: PourRate.medium,
-              cue: 'Basahi rata 50g lalu swirl lembut.',
-            ),
-            PourStage(
-              order: 2,
-              label: 'Tuangan Utama 1',
-              startSec: 45,
-              pourEndSec: 65,
-              endSec: 80,
-              targetCumulativePct: 0.50,
-              pattern: PourPattern.spiral,
-              rate: PourRate.medium,
-              cue: 'Tuang spiral pelan di area tengah.',
-            ),
-            PourStage(
-              order: 3,
-              label: 'Tuangan Utama 2',
-              startSec: 80,
-              pourEndSec: 100,
-              endSec: 120,
-              targetCumulativePct: 0.78,
-              pattern: PourPattern.center,
-              rate: PourRate.medium,
-              cue: 'Jaga ketinggian air tetap tenang.',
-            ),
-            PourStage(
-              order: 4,
-              label: 'Finishing + Rao Spin',
-              startSec: 120,
-              pourEndSec: 135,
-              endSec: 175,
-              targetCumulativePct: 1.0,
-              pattern: PourPattern.swirl,
-              rate: PourRate.slow,
-              cue: 'Rao Spin 1x agar bed kopi rata sempurna.',
-            ),
-          ],
-        ),
-        BrewRecipe(
-          id: 'custom-iced-sore',
-          name: 'Japanese Iced Sore',
-          author: 'Dito',
-          mode: BrewMode.iced,
-          badge: 'Custom',
-          isOfficial: false,
-          summary:
-              '3 tahap ringan · rasio 1:16 · 36% Es · segar manis untuk seduhan sore santai.',
-          doseG: 15.0,
-          ratio: 16.1,
-          waterG: 242.0,
-          iceRatio: 0.36,
-          icedMethod: IcedMethod.brewFirst,
-          tempC: 95,
-          targetDrawdownSec: 140,
-          grindOffsetUm: -90,
-          stages: [
-            PourStage(
-              order: 1,
-              label: 'Bloom Aromatik',
-              startSec: 0,
-              pourEndSec: 12,
-              endSec: 45,
-              targetCumulativePct: 0.32,
-              pattern: PourPattern.spiral,
-              rate: PourRate.medium,
-              cue: 'Basahi bubuk rata untuk mengeluarkan aroma buah.',
-            ),
-            PourStage(
-              order: 2,
-              label: 'Tuangan Tengah',
-              startSec: 45,
-              pourEndSec: 65,
-              endSec: 90,
-              targetCumulativePct: 0.70,
-              pattern: PourPattern.spiral,
-              rate: PourRate.medium,
-              cue: 'Tuang spiral stabil di tengah bed kopi.',
-            ),
-            PourStage(
-              order: 3,
-              label: 'Penutup + Tuang ke Es',
-              startSec: 90,
-              pourEndSec: 105,
-              endSec: 140,
-              targetCumulativePct: 1.0,
-              pattern: PourPattern.swirl,
-              rate: PourRate.slow,
-              cue: 'Tuang konsentrat panas perlahan ke gelas es batu.',
-            ),
-          ],
         ),
       ];
 
@@ -969,7 +857,7 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
     state = PocketAppState(
       isLoaded: true,
       prefs: UserPrefs(
-        onboarded: true,
+        onboarded: false,
         themePref: currentTheme,
         unitMode: currentUnit,
         tempUnit: currentTemp,
@@ -1023,6 +911,7 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
     required TempUnit tempUnit,
     required String grinderId,
     required String dripperId,
+    String? userName,
   }) {
     final grinderChanged = state.activeProfile.grinderId != grinderId;
     final updatedProfiles = state.profiles.map((p) {
@@ -1031,8 +920,12 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
       }
       return p;
     }).toList();
+    final trimmedName = userName?.trim();
     state = state.copyWith(
       prefs: state.prefs.copyWith(
+        userName: (trimmedName != null && trimmedName.isNotEmpty)
+            ? trimmedName
+            : state.prefs.userName,
         unitMode: unit,
         tempUnit: tempUnit,
         onboarded: true,
@@ -1043,6 +936,34 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
       _recomputeRecommendedClick();
     }
     _persist();
+  }
+
+  void skipOnboarding() {
+    state = state.copyWith(
+      prefs: state.prefs.copyWith(onboarded: true),
+    );
+    _persist();
+  }
+
+  /// Restores ALL deleted built-in grinders, drippers, filters, and official recipes
+  /// without affecting any user custom gear, custom recipes, beans, or brew logs.
+  Future<void> restoreAllDeletedOfficialCatalog() async {
+    final catalog = await CatalogLoader.loadBundled();
+    final customGrinders = state.grinders.where((g) => !g.isOfficial).toList();
+    final customDrippers = state.drippers.where((d) => !d.isOfficial).toList();
+    final customFilters = state.filters.where((f) => !f.isOfficial).toList();
+    final customRecipes = state.recipes.where((r) => !r.isOfficial).toList();
+    state = state.copyWith(
+      grinders: [...catalog.grinders, ...customGrinders],
+      drippers: [...catalog.drippers, ...customDrippers],
+      filters: [...catalog.filters, ...customFilters],
+      recipes: [...catalog.recipes, ...customRecipes],
+      deletedGrinderIds: const <String>{},
+      deletedDripperIds: const <String>{},
+      deletedFilterIds: const <String>{},
+      deletedRecipeIds: const <String>{},
+    );
+    await _persist();
   }
 
   // ---- GEAR & PROFILES ----

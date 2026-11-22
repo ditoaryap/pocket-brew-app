@@ -8,7 +8,9 @@ void main() {
   testWidgets('Pocket Brew renders Home Morning Ritual & 5-tab Floating Dock', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: PocketBrewApp()));
+    await tester.pumpWidget(
+      const ProviderScope(child: PocketBrewApp(enableOnboardingGate: false)),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Hot V60'), findsWidgets);

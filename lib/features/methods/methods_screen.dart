@@ -55,20 +55,12 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
     return '${_formatRatio(r.ratio)} · $waterLabel · $temp · ${r.stages.length} tahap · ~$dur';
   }
 
-  String _customStripSpec(BrewRecipe r, UserPrefs prefs) {
-    final temp = BrewRecipeScaler.formatTemp(r.tempC, prefs.tempUnit);
-    final totalWater = r.waterG > 0 ? r.waterG : r.doseG * r.ratio;
-    final waterLabel =
-        BrewRecipeScaler.formatLiquidCompact(totalWater, prefs.unitMode);
-    return '${r.stages.length} tahap · ${_formatRatio(r.ratio)} · $waterLabel · $temp';
-  }
-
   Future<void> _confirmDeleteRecipe(BrewRecipe recipe) async {
     final ok = await showPocketDeleteDialog(
       context,
       title: 'Hapus Metode Resep?',
       message: recipe.isOfficial
-          ? 'Hapus resep bawaan "${recipe.name}" dari daftar? Kamu bisa memulihkannya kembali kapan saja lewat tombol Pulihkan di bawah.'
+          ? 'Hapus resep bawaan "${recipe.name}" dari daftar? Jika nanti butuh lagi, kamu bisa memulihkannya di menu Pengaturan.'
           : 'Hapus resep custom "${recipe.name}" secara permanen?',
       confirmLabel: 'Hapus Resep',
     );
@@ -99,7 +91,6 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
     }).toList();
     final visibleShown = shown.take(_visibleCount).toList();
     final hasMore = shown.length > visibleShown.length;
-    final featuredCustom = customRecipes.firstOrNull;
 
     return Scaffold(
       body: SafeArea(
@@ -500,107 +491,6 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
                                 ],
                               ),
                             ),
-
-                          // Signature Sage Custom Recipe Strip at bottom of Pro Tab
-                          if (_tab == 0 &&
-                              _modeFilter == 'all' &&
-                              featuredCustom != null)
-                            PocketEntrance(
-                              delayMs: 160,
-                              offsetY: 8,
-                              child: PocketCard(
-                                backgroundColor: c.tintSage,
-                                elevated: false,
-                                radius: 18,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 11,
-                                ),
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  notifier.selectRecipe(featuredCustom.id);
-                                  context.go('/brew');
-                                },
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '${featuredCustom.name} · Custom',
-                                            style: PocketTheme.ui(
-                                              size: 13,
-                                              weight: 700,
-                                              color: c.brandSage,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            _customStripSpec(
-                                              featuredCustom,
-                                              state.prefs,
-                                            ),
-                                            style: PocketTheme.mono(
-                                              size: 10.5,
-                                              weight: FontWeight.w500,
-                                              color: c.textPrimary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    PocketPill(
-                                      label: 'Edit',
-                                      pocketIcon: PocketIconType.edit,
-                                      iconSize: 13.5,
-                                      height: 32,
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      backgroundColor: c.surfaceCard,
-                                      foregroundColor: c.textPrimary,
-                                      onTap: () => context.push(
-                                        '/brew/stages?recipeId=${featuredCustom.id}',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                          if (state.hasDeletedOfficialRecipes) ...[
-                            const SizedBox(height: 12),
-                            Center(
-                              child: TextButton(
-                                onPressed: () async {
-                                  await notifier
-                                      .restoreDeletedOfficialRecipes();
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Semua resep bawaan berhasil dipulihkan ✓',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Text(
-                                  'Pulihkan Resep Bawaan yang Dihapus',
-                                  style: PocketTheme.ui(
-                                    size: 12,
-                                    weight: 700,
-                                    color: c.textTertiary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
               ),

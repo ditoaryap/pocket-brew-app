@@ -13,6 +13,7 @@ import '../features/gear/add_custom_gear_screen.dart';
 import '../features/gear/gear_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/learn/learn_beans_detail_screen.dart';
+import '../features/learn/learn_flavor_wheel_screen.dart';
 import '../features/learn/learn_hub_screen.dart';
 import '../features/learn/learn_pour_detail_screen.dart';
 import '../features/methods/methods_screen.dart';
@@ -210,6 +211,14 @@ GoRouter createPocketRouter({String initialLocation = '/home'}) {
         pageBuilder: (_, state) => pocketSlidePage(
           key: state.pageKey,
           child: const LearnPourDetailScreen(),
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/learn/wheel',
+        pageBuilder: (_, state) => pocketSlidePage(
+          key: state.pageKey,
+          child: const LearnFlavorWheelScreen(),
         ),
       ),
       GoRoute(

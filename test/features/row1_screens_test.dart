@@ -46,6 +46,7 @@ void main() {
     WidgetTester tester, {
     Size size = const Size(412, 917),
     String initialLocation = '/home',
+    bool enableOnboardingGate = false,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -67,7 +68,10 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: PocketBrewApp(router: router),
+        child: PocketBrewApp(
+          router: router,
+          enableOnboardingGate: enableOnboardingGate,
+        ),
       ),
     );
     for (int i = 0; i < 25; i++) {
@@ -80,6 +84,25 @@ void main() {
     await tester.pumpAndSettle();
     return (container: container, router: router);
   }
+
+  testWidgets(
+    'v1.0.3 First-Time Launch · Minimalist Welcome Curtain routes fresh user to Setup Awal',
+    (tester) async {
+      final env = await pumpApp(tester, enableOnboardingGate: true);
+      final container = env.container;
+
+      // Fresh install automatically routes to Onboarding (Setup Awal)!
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.text('Siapkan meja seduhmu'), findsOneWidget);
+      expect(container.read(pocketStoreProvider).prefs.onboarded, isFalse);
+
+      // Tapping "Lewati dulu" persists onboarded=true and opens Beranda
+      await tester.tap(find.text('Lewati dulu'));
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(container.read(pocketStoreProvider).prefs.onboarded, isTrue);
+    },
+  );
 
   testWidgets('Screen 01 · Onboarding Setup Awal & per-tab Custom Gear notes', (
     tester,
@@ -188,7 +211,7 @@ void main() {
     expect(find.text('94°C'), findsOneWidget);
     expect(find.text('250 ml'), findsOneWidget);
     expect(find.text('Stok Biji di Rumah'), findsOneWidget);
-    expect(find.text('6 resep pro · 2 buatanmu'), findsOneWidget);
+    expect(find.text('6 resep pro · 0 buatanmu'), findsOneWidget);
     expect(find.text('Belajar Seduh'), findsOneWidget);
 
     // Quick Method switch directly inside Beranda!
@@ -294,7 +317,7 @@ void main() {
     expect(find.text('Es Duluan (Server)'), findsOneWidget);
   });
 
-  testWidgets('Screen 03 · Metode & Resep tabs, custom strip, select & edit', (
+  testWidgets('Screen 03 · Metode & Resep tabs, zero demo custom recipes, select & create', (
     tester,
   ) async {
     final env = await pumpApp(tester);
@@ -306,31 +329,23 @@ void main() {
 
     expect(find.byType(MethodsScreen), findsOneWidget);
     expect(find.text('Resep Profesional (6)'), findsOneWidget);
-    expect(find.text('Resep Custom (2)'), findsOneWidget);
+    expect(find.text('Resep Custom (0)'), findsOneWidget);
     expect(find.text('James Hoffmann · Better 1-Cup ✓'), findsOneWidget);
     expect(find.text('Tetsu Kasuya · 4:6 Method'), findsOneWidget);
     expect(find.text('James Hoffmann · Japanese Iced'), findsOneWidget);
+    // V60 Pagi Custom & bottom custom strip MUST NOT exist!
+    expect(find.text('V60 Pagi Custom · Custom'), findsNothing);
+    expect(find.text('V60 Pagi Custom'), findsNothing);
+    expect(find.text('Pulihkan Resep Bawaan yang Dihapus'), findsNothing);
 
-    await tester.scrollUntilVisible(
-      find.text('V60 Pagi Custom · Custom'),
-      180,
-      scrollable: find
-          .descendant(
-            of: find.byType(MethodsScreen),
-            matching: find.byType(Scrollable),
-          )
-          .last,
-    );
-    expect(find.text('V60 Pagi Custom · Custom'), findsOneWidget);
-
-    // Switch to Resep Custom (2) tab
-    await tester.tap(find.text('Resep Custom (2)'));
+    // Switch to Resep Custom (0) tab -> shows clean empty state with CTA
+    await tester.tap(find.text('Resep Custom (0)'));
     await tester.pumpAndSettle();
-    expect(find.text('V60 Pagi Custom'), findsOneWidget);
-    expect(find.text('Japanese Iced Sore'), findsOneWidget);
+    expect(find.text('V60 Pagi Custom'), findsNothing);
+    expect(find.text('Japanese Iced Sore'), findsNothing);
 
-    // Tap Edit on first custom recipe -> opens PourStageEditorScreen with that recipe
-    await tester.tap(find.text('Edit').first);
+    // Tap Buat Resep Custom -> opens PourStageEditorScreen cleanly
+    await tester.tap(find.text('Buat Resep Custom'));
     await tester.pumpAndSettle();
     expect(find.text('Simpan & Pakai Resep'), findsOneWidget);
     router.pop();
@@ -610,6 +625,9 @@ void main() {
       await tester.tap(find.text('Lewati · Mulai Langsung'));
       await tester.pump(const Duration(milliseconds: 50));
       expect(find.text('Tuang · 1/5'), findsOneWidget);
+      expect(find.text('TARGET TIMBANGAN'), findsOneWidget);
+      expect(find.text('TUANG TAHAP INI'), findsOneWidget);
+      expect(find.text('Pola: Spiral · Lihat Teknik'), findsOneWidget);
       expect(find.textContaining('50 ml / 12 dtk'), findsWidgets);
       expect(find.textContaining('Tuang 50 ml dlm 12 dtk'), findsOneWidget);
       expect(find.textContaining('g/s'), findsNothing);
@@ -621,14 +639,19 @@ void main() {
         of: inTimer,
         matching: find.byType(Scrollable),
       );
-      await tester.drag(timerScrollable, const Offset(0, -350));
+      await tester.scrollUntilVisible(
+        find.text('+15d Lompat Cepat (Preview)'),
+        260,
+        scrollable: timerScrollable,
+      );
+      await tester.drag(timerScrollable, const Offset(0, -140));
       await tester.pump(const Duration(milliseconds: 50));
       for (int i = 0; i < 13; i++) {
         await tester.tap(find.text('+15d Lompat Cepat (Preview)'));
         await tester.pump(const Duration(milliseconds: 20));
       }
       // Scroll back to top to inspect the Dial overtime badge cleanly
-      await tester.drag(timerScrollable, const Offset(0, 350));
+      await tester.drag(timerScrollable, const Offset(0, 800));
       await tester.pump(const Duration(milliseconds: 50));
       expect(find.textContaining('Menetes · +'), findsOneWidget);
 
@@ -691,7 +714,7 @@ void main() {
   );
 
   testWidgets(
-    'Settings Save CTA, Add/Detail Bean overhaul, BrewLog filters, Edit Tahapan preset & Belajar Seduh 7 topics',
+    'Settings Save CTA, Add/Detail Bean overhaul, BrewLog filters, Edit Tahapan preset & Belajar Seduh 8 topics',
     (tester) async {
       final env = await pumpApp(tester);
       final router = env.router;
@@ -709,9 +732,11 @@ void main() {
         scrollable: settingsScroll,
       );
       expect(find.text('Hapus Data'), findsOneWidget);
-      await tester.drag(settingsScroll, const Offset(0, 600));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('°F'));
+      await tester.scrollUntilVisible(
+        find.text('°F'),
+        -240,
+        scrollable: settingsScroll,
+      );
       await tester.tap(find.text('°F'));
       await tester.pumpAndSettle();
       expect(find.text('Simpan Pengaturan'), findsOneWidget);
@@ -801,12 +826,38 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
 
-      // 4. Belajar Seduh has all 7 structured topics
+      // 4. Belajar Seduh has all 8 structured topics (including Roda Rasa Kopi + 5-pattern Pour Guide)
       router.push('/learn');
       await tester.pumpAndSettle();
-      expect(find.text('7 Materi'), findsOneWidget);
+      expect(find.text('8 Materi'), findsOneWidget);
       expect(find.text('Dasar Seduh: Rasio, Gilingan & Suhu'), findsOneWidget);
       expect(find.text('Perbaiki Rasa: Asam vs Pahit'), findsOneWidget);
+      // Open Roda Rasa Kopi (/learn/wheel) & verify 9 SCA categories + search
+      router.push('/learn/wheel');
+      await tester.pumpAndSettle();
+      expect(find.text('Roda Rasa Kopi'), findsOneWidget);
+      expect(find.textContaining('9 Kategori ·'), findsOneWidget);
+      expect(find.text('Fruity'), findsWidgets);
+      expect(find.text('Floral'), findsWidgets);
+      expect(find.text('Sweet'), findsWidgets);
+      await tester.enterText(find.byType(TextField).first, 'Peach');
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Hasil Pencarian'), findsOneWidget);
+      expect(find.text('Peach'), findsWidgets);
+      router.pop();
+      await tester.pumpAndSettle();
+      // Open Teknik Tuang (/learn/pour) & verify all 5 pour techniques
+      router.push('/learn/pour');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(find.text('Teknik Penuangan'), findsOneWidget);
+      expect(find.text('Spiral'), findsWidgets);
+      expect(find.text('Center'), findsWidgets);
+      expect(find.text('Pulse'), findsWidgets);
+      expect(find.text('Osmotic'), findsWidgets);
+      expect(find.text('Swirl'), findsWidgets);
+      router.pop();
+      await tester.pumpAndSettle();
       router.pop();
       await tester.pumpAndSettle();
 
@@ -892,8 +943,22 @@ void main() {
       expect(find.text('+50 ml'), findsWidgets);
       expect(find.text('Judul Tahap 6'), findsOneWidget);
 
+      // Test Info Pola modal inside Pour Stage Editor!
+      await tester.scrollUntilVisible(
+        find.text('Info Pola').first,
+        240,
+        scrollable: stagesScroll,
+      );
+      await tester.tap(find.text('Info Pola').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Panduan Teknik Tuangan'), findsOneWidget);
+      expect(find.text('Cara Melakukan Teknik Ini'), findsOneWidget);
+      await tester.tap(find.text('Paham · Tutup Panduan'));
+      await tester.pumpAndSettle();
+
       // Switch to Japanese Iced -> custom Es Batu grams visible!
-      await tester.drag(stagesScroll, const Offset(0, 600));
+      await tester.drag(stagesScroll, const Offset(0, 900));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Japanese Iced'));
       await tester.pumpAndSettle();
@@ -1016,12 +1081,24 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
 
-      // Live Timer Dark @ 360dp (Ready state)
+      // Live Timer Dark @ 360dp (Ready AND Running states!)
       router.push('/timer');
       await tester.pumpAndSettle();
       expect(find.byType(LiveTimerScreen), findsOneWidget);
       final timerErr = tester.takeException();
-      expect(timerErr, isNull, reason: 'LiveTimer 360dp error: $timerErr');
+      expect(timerErr, isNull, reason: 'LiveTimer Ready 360dp error: $timerErr');
+      await tester.tap(find.text('Mulai Timer Sekarang'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('Lewati · Mulai Langsung'));
+      await tester.pump(const Duration(milliseconds: 80));
+      final timerRunErr = tester.takeException();
+      expect(
+        timerRunErr,
+        isNull,
+        reason: 'LiveTimer Running 360dp error: $timerRunErr',
+      );
+      await tester.tap(find.text('Reset'));
+      await tester.pumpAndSettle();
       router.pop();
       await tester.pumpAndSettle();
 
@@ -1061,13 +1138,25 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
 
-      // Learn Hub + Basics Dark @ 360dp
+      // Learn Hub + Basics + Wheel + Pour Dark @ 360dp
       router.push('/learn');
       await tester.pumpAndSettle();
-      expect(find.text('7 Materi'), findsOneWidget);
+      expect(find.text('8 Materi'), findsOneWidget);
       expect(tester.takeException(), isNull);
       router.push('/learn/basics');
       await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      router.pop();
+      await tester.pumpAndSettle();
+      router.push('/learn/wheel');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      router.pop();
+      await tester.pumpAndSettle();
+      router.push('/learn/pour');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(find.text('Teknik Penuangan'), findsOneWidget);
       expect(tester.takeException(), isNull);
       router.pop();
       await tester.pumpAndSettle();
@@ -1143,7 +1232,8 @@ void main() {
       expect(find.textContaining('Arsip'), findsNothing);
       expect(tester.takeException(), isNull);
 
-      // 3. Methods screen: delete an official recipe with confirmation modal & restore it
+      // 3. Methods screen: delete an official recipe with confirmation modal
+      //    and verify NO inline restore button in Methods/Gear — restore is centralized in Settings!
       router.push('/methods');
       await tester.pumpAndSettle();
       final beforeCount = container.read(pocketStoreProvider).recipes.length;
@@ -1156,36 +1246,71 @@ void main() {
         container.read(pocketStoreProvider).recipes.length,
         beforeCount - 1,
       );
-      final methodsScroll = find
-          .descendant(
-            of: find.byType(MethodsScreen),
-            matching: find.byType(Scrollable),
-          )
-          .last;
-      await tester.scrollUntilVisible(
-        find.text('Pulihkan Resep Bawaan yang Dihapus'),
-        220,
-        scrollable: methodsScroll,
-      );
-      await tester.drag(methodsScroll, const Offset(0, -140));
-      await tester.pump(const Duration(seconds: 5));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Pulihkan Resep Bawaan yang Dihapus'));
-      await tester.pumpAndSettle();
-      expect(container.read(pocketStoreProvider).recipes.length, beforeCount);
+      expect(find.text('Pulihkan Resep Bawaan yang Dihapus'), findsNothing);
       router.pop();
       await tester.pumpAndSettle();
 
-      // 4. Settings: Hapus Data wipes beans & logs cleanly after confirmation
+      // Verify GearScreen also has NO inline restore button
+      router.go('/gear');
+      await tester.pumpAndSettle();
+      expect(find.text('Pulihkan Alat Bawaan yang Dihapus'), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      // 4. Settings: Centralized "Pulihkan Preset Bawaan Aplikasi" shows exact count & restores cleanly
       router.push('/settings');
       await tester.pumpAndSettle();
       final settingsScroll = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.text('Pulihkan Preset Bawaan Aplikasi'),
+        220,
+        scrollable: settingsScroll,
+      );
+      await tester.drag(settingsScroll, const Offset(0, -140));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.text('Pulihkan (1)'), findsOneWidget);
+      await tester.tap(find.text('Pulihkan (1)'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pulihkan Preset Bawaan?'), findsOneWidget);
+      expect(
+        find.textContaining('1 Resep Profesional bawaan'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Pulihkan').last);
+      await tester.pumpAndSettle();
+      expect(container.read(pocketStoreProvider).recipes.length, beforeCount);
+      expect(find.text('Lengkap ✓'), findsOneWidget);
+      // Let restore SnackBar auto-dismiss so bottom buttons aren't occluded
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      // 5. Light Mode @ 360dp zero overflow on /learn/wheel & Running LiveTimerScreen
+      router.push('/learn/wheel');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      router.pop();
+      await tester.pumpAndSettle();
+
+      router.push('/timer');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mulai Timer Sekarang'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('Lewati · Mulai Langsung'));
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Reset'));
+      await tester.pumpAndSettle();
+      router.pop();
+      await tester.pumpAndSettle();
+
+      // 6. Settings: Hapus Data wipes beans & logs cleanly after confirmation & returns to Setup Awal
       await tester.scrollUntilVisible(
         find.text('Hapus Data'),
         220,
         scrollable: settingsScroll,
       );
       await tester.drag(settingsScroll, const Offset(0, -240));
+      await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Hapus Data'));
       await tester.pumpAndSettle();
@@ -1194,6 +1319,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(container.read(pocketStoreProvider).beans, isEmpty);
       expect(container.read(pocketStoreProvider).logs, isEmpty);
+      expect(container.read(pocketStoreProvider).prefs.onboarded, isFalse);
+      expect(find.byType(OnboardingScreen), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

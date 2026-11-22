@@ -104,7 +104,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                         const SizedBox(width: 8),
                         PocketTapScale(
-                          onTap: () => context.go('/home'),
+                          onTap: () {
+                            ref
+                                .read(pocketStoreProvider.notifier)
+                                .skipOnboarding();
+                            context.go('/home');
+                          },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               vertical: 8,

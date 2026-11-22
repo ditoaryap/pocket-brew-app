@@ -65,6 +65,14 @@ class LearnHubScreen extends ConsumerWidget {
                           c.brandTerracottaInk,
                           '/learn/pour',
                         ),
+                      'wheel' => (
+                          PocketIconType.starFilled,
+                          c.tintBerry,
+                          c.brandBerry,
+                          c.textOnAccent,
+                          c.brandBerry,
+                          '/learn/wheel',
+                        ),
                       'troubleshoot' => (
                           PocketIconType.compass,
                           c.tintSage,

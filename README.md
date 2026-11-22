@@ -1,89 +1,69 @@
-# Pocket Brew — Manual Pour-Over Companion (Hot V60 & Japanese Iced)
+<p align="center">
+  <img src="web/icons/Icon-192.png" width="88" alt="Pocket Brew" />
+</p>
 
-**Pocket Brew** adalah aplikasi pendamping seduh kopi manual rumahan (**Hot V60 & Japanese Iced**) yang **100% Offline-First**, menggunakan **rumus ekstraksi kopi deterministik lokal (tanpa AI/LLM & tanpa server eksternal)**, dengan desain Material 3 **Soft Oat (Terang)** & **Espresso Dusk (Gelap)**.
+<h1 align="center">Pocket Brew</h1>
 
-- **Versi Saat Ini:** `v1.0.0+1` ([Lihat CHANGELOG.md](CHANGELOG.md))
-- **Penyimpanan:** 100% Lokal di perangkat (`Dual-Slot Auto-Backup` + Ekspor/Impor JSON)
+<p align="center">
+  Teman seduh kopi manual rumahan untuk <strong>Hot V60</strong> dan <strong>Japanese Iced</strong>.<br />
+  Bekerja penuh tanpa internet, tanpa akun, dan seluruh catatan tersimpan aman di HP kamu.
+</p>
 
----
-
-## Fitur Utama
-
-1. **Beranda Launchpad Interaktif (`HomeScreen`)**
-   - Pilih mode **Hot V60** atau **Japanese Iced**, ganti **Biji Kopi Aktif**, dan ganti **Metode Seduh** (*James Hoffmann 1-Cup*, *Tetsu Kasuya 4:6*, *Cafec Osmotic Flow*, dll.) langsung dari Beranda.
-   - Ringkasan parameter *real-time* (**Dosis**, **Air/Es**, **Klik Grinder**, **Suhu Air**) + pintasan cepat ke **Alat Seduh**.
-2. **Menu Seduh & Checklist Persiapan Barista (`QuickBrewScreen`)**
-   - Kartu terpadu **Resep · Dosis, Rasio & Suhu** (`g` / `ml` / `oz` dan `°C` / `°F`).
-   - **2 Opsi Japanese Iced**: **Es Duluan (Server)** vs **Seduh Dulu → Es**.
-   - **Interactive Click Ruler (`CustomPainter`)** dengan konversi lintas grinder berbasis **Delta-Micron (`Δμm`)**.
-   - **Sheet Checklist `"Siap-siap Seduh"`** saat menekan **Mulai Brew** (urutan persiapan barista dari panaskan air hingga tare `0.0g` sebelum timer berjalan).
-3. **Editor Tahapan Tuangan Independen (`PourStageEditorScreen`)**
-   - Rasio simetris (`−0.5` / `+0.5`), berat **Es Batu Custom** (gram & persen), serta alokasi air per tahap yang independen dengan bar **Panduan Alokasi Air per Tahap** dan chip **`+ Isi sisa target`**.
-4. **Live Brew Timer Dual-Phase & Evaluasi Seduh SCA (`BrewTimerScreen` & `EvaluationScreen`)**
-   - Hitung mundur `3–2–1`, panduan tuang & swirl per tahap, roda rasa SCA 2 arah, diagnosis ekstraksi lokal untuk saran klik besok, dan pengurangan stok biji otomatis (`Kurangi stok biji`).
-5. **Katalog Biji Kopi & Koleksi Alat Seduh (`BeansScreen` & `GearScreen`)**
-   - Pencatatan **Berat Biji Saat Ini**, **Tanggal Sangrai & Masa Paling Enak** (*Mulai Enak* & *Sampai Hari*), mode **Simpan di Freezer**, serta manajemen **Setup Aktif Saya** & **Koleksi Alat Seduh** dengan transisi tab 60fps.
+<p align="center">
+  <a href="https://github.com/ditoaryap/pocket-brew-app/releases/latest"><strong>Unduh APK Terbaru (v1.0.3)</strong></a>
+  &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Catatan Perubahan</a>
+</p>
 
 ---
 
-## Keamanan & Ketahanan Database Lokal (Anti-Rusak & Anti-Bocor)
+## Tentang Pocket Brew
 
-1. **100% Offline & Tanpa Kebocoran Data:** Seluruh data pengguna disimpan secara lokal di HP dan tidak pernah dikirim ke server mana pun. File sensitif (`.jks`, `.keystore`, `android/key.properties`, `.pem`, `.env`) sudah dikunci di [`.gitignore`](.gitignore) agar tidak pernah bocor ke GitHub.
-2. **Dual-Slot Auto-Backup (`PocketStorage`):** Setiap kali ada perubahan data, sistem otomatis menyimpan salinan valid sebelumnya ke slot cadangan (`pocket_brew_state_v1_backup`). Jika aplikasi tertutup paksa saat menyimpan, database otomatis pulih dari slot cadangan.
-3. **Fault-Isolated Parsing (`PocketStoreNotifier`):** Setiap daftar (*biji kopi*, *riwayat seduhan*, *resep custom*, *alat seduh*) dibaca per item secara terisolasi sehingga pembaruan versi aplikasi tidak akan pernah menghapus atau me-reset database pengguna.
-4. **Salin & Pulihkan Cadangan JSON:** Tersedia di menu **Pengaturan → Data Tersimpan Aman di HP** untuk pindah perangkat kapan saja.
+**Pocket Brew** dibuat untuk membuat ritual seduh *pour-over* harian jadi lebih tenang, rapi, dan konsisten. Mulai dari menentukan takaran dosis dan rasio, menyesuaikan klik grinder sesuai alat yang kamu punya, mengikuti timer tuangan langkah demi langkah, sampai mencatat hasil rasa dan stok biji kopi di rumah.
 
----
-
-## Cara Update & Rilis Versi Baru ke GitHub (Untuk Personal & Teman)
-
-Repository ini sudah dilengkapi **GitHub Actions** ([`.github/workflows/release-apk.yml`](.github/workflows/release-apk.yml)). Setiap kali kamu menaikkan versi lalu `push` ke branch `main`, GitHub otomatis menjalankan test, merakit file `.apk`, dan menerbitkannya di halaman **GitHub Releases**.
-
-### 1. Setup Awal Repository ke GitHub (Hanya Sekali)
-```bash
-git add .
-git commit -m "chore: initial release Pocket Brew v1.0.0"
-git remote add origin https://github.com/USERNAME_KAMU/pocket-brew-app.git
-git push -u origin main
-```
-
-### 2. Setup Kunci Tanda Tangan APK Tetap (Agar Teman Bisa Update Tanpa Uninstall)
-Supaya `.apk` baru selalu bisa ** langsung ditimpa (Update)** di atas aplikasi lama tanpa menghapus data lokal di HP teman:
-
-1. Buat 1 file keystore tetap di laptopmu (cukup sekali seumur hidup):
-   ```bash
-   keytool -genkey -v -keystore android/app/upload-keystore.jks \
-     -keyalg RSA -keysize 2048 -validity 10000 -alias pocketbrew
-   ```
-2. Salin [`android/key.properties.example`](android/key.properties.example) menjadi `android/key.properties` dan isi password yang kamu buat tadi (file ini otomatis diabaikan oleh `.gitignore` sehingga **tidak akan bocor ke GitHub**).
-3. *(Opsional jika ingin build otomatis dari GitHub Actions memakai kunci yang sama)*: Masukkan base64 keystore & password ke menu **Settings → Secrets and variables → Actions** di GitHub:
-   - `POCKET_BREW_KEYSTORE_BASE64` (hasil `base64 -i android/app/upload-keystore.jks | pbcopy`)
-   - `POCKET_BREW_KEYSTORE_PASSWORD`
-   - `POCKET_BREW_KEY_ALIAS` (`pocketbrew`)
-   - `POCKET_BREW_KEY_PASSWORD`
-
-### 3. Setiap Kali Mau Rilis Update Baru (Misal `v1.0.1`)
-1. Naikkan nomor versi di [`pubspec.yaml`](pubspec.yaml) (contoh: `version: 1.0.1+2`) dan samakan di [`lib/app/pocket_version.dart`](lib/app/pocket_version.dart).
-2. Catat perubahan singkat di [`CHANGELOG.md`](CHANGELOG.md).
-3. Commit & push ke `main`:
-   ```bash
-   git add .
-   git commit -m "release: v1.0.1"
-   git push origin main
-   ```
-4. **Selesai!** GitHub Actions akan otomatis mem-build `pocket-brew-v1.0.1.apk` dan memunculkannya di tab **Releases** GitHub kamu. Kamu atau temanmu tinggal unduh `.apk` tersebut lalu tekan **Update**.
+Semua perhitungan dilakukan langsung di perangkat — ringan, instan, dan tetap bisa dipakai meski sedang tidak ada sinyal.
 
 ---
 
-## Perintah Pengembangan Lokal
+## Yang Bisa Kamu Lakukan
 
-```bash
-# Jalankan seluruh unit, database & widget tests
-flutter test
+- **Hot V60 & Japanese Iced**
+  Atur dosis kopi, rasio air, suhu seduh, serta pilihan es batu (*Es Duluan di Server* atau *Seduh Dulu lalu Es*) dalam satu layar yang rapi.
+- **Konversi Klik Grinder**
+  Ganti grinder tanpa pusing menebak ulang ukuran gilingan. Mendukung grinder populer sekaligus alat buatan/pilihan sendiri.
+- **Timer Seduh yang Mudah Dibaca**
+  Lengkap dengan hitung mundur persiapan `3–2–1`, target timbangan yang besar dan jelas, bunyi pengingat tiap tahap, serta jeda/lanjut yang nyaman saat tangan sibuk memegang kettle.
+- **Metode Resep Profesional & Custom**
+  Tersedia 6 resep andalan (*James Hoffmann 1-Cup*, *Tetsu Kasuya 4:6*, *Japanese Iced*, *Cafec Osmotic Flow*, dan lainnya). Kamu juga bebas membuat resep sendiri atau menyesuaikan tahap tuangan khusus untuk satu sesi seduh.
+- **Evaluasi Rasa & Catatan Seduhan**
+  Catat skor, karakter rasa lewat Roda Rasa SCA, dapatkan saran perbaikan klik/suhu untuk seduhan berikutnya, dan kurangi stok biji secara otomatis.
+- **Stok Biji Kopi & Masa Paling Enak**
+  Pantau sisa gram biji di rumah, tanggal sangrai, masa paling enak (*resting window*), dan status penyimpanan cadangan (*freezer*).
+- **Belajar Seduh & Roda Rasa Kopi**
+  Berisi 8 panduan ringkas untuk pemula maupun penyeduh rutin, termasuk animasi interaktif 5 teknik tuangan (*Spiral, Tengah, Pulse, Osmotic Flow, Swirl*) dan eksplorasi lengkap Roda Rasa Kopi (SCA).
+- **Mode Terang & Gelap + Cadangan Data**
+  Nyaman dipakai pagi maupun malam dengan tema *Soft Oat* (Terang) dan *Espresso Dusk* (Gelap). Data juga bisa dicadangkan dan dipulihkan kapan saja dari menu Pengaturan.
 
-# Analisis kode statis (0 issues)
-flutter analyze
+---
 
-# Build Android APK secara lokal di laptop
-flutter build apk --release
-```
+## Cara Pasang di Android
+
+1. Buka halaman [**GitHub Releases**](https://github.com/ditoaryap/pocket-brew-app/releases/latest).
+2. Di bagian **Assets**, unduh file **`pocket-brew-v1.0.3.apk`**.
+3. Buka file yang selesai diunduh lalu tekan **Install**. Jika diminta izin memasang dari browser/pengelola file, izinkan terlebih dahulu.
+
+### Cara Update ke Versi Baru (Tanpa Kehilangan Data)
+
+Cukup unduh `.apk` versi terbaru lalu langsung **Install / Update** di atas aplikasi yang sudah terpasang. **Tidak perlu menghapus (uninstall)** aplikasi lama — seluruh data biji kopi, resep, alat, dan riwayat seduhan kamu akan tetap aman.
+
+---
+
+## Privasi & Penyimpanan
+
+Pocket Brew tidak mengumpulkan data pribadi, tidak memerlukan login, dan tidak mengirim catatan seduhanmu ke server mana pun. Semua data hanya tersimpan secara lokal di perangkatmu, dilengkapi cadangan otomatis agar tetap aman saat pembaruan.
+
+---
+
+<p align="center">
+  Dibuat dengan tenang untuk meja seduh rumahan · <a href="CHANGELOG.md">Lihat Changelog v1.0.3</a>
+</p>

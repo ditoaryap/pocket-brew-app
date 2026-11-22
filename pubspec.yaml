@@ -1,7 +1,7 @@
 name: pocket_brew
 description: Pocket Brew — Pendamping seduh manual kopi rumahan (Hot V60 & Japanese Iced), 100% offline-first & rumus kopi lokal tanpa AI.
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.3+4
 
 environment:
   sdk: ^3.10.0
@@ -24,7 +24,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/catalog/catalog_seed_v1.json
-    - assets/images/drippers/
   fonts:
     - family: PlusJakartaSans
       fonts:

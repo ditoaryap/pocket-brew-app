@@ -3,8 +3,8 @@
 class PocketVersion {
   PocketVersion._();
 
-  static const String versionName = '1.0.2';
-  static const int buildNumber = 3;
+  static const String versionName = '1.0.3';
+  static const int buildNumber = 4;
   static const int dbSchemaVersion = 1;
 
   static String get fullLabel => 'v$versionName (Build $buildNumber)';

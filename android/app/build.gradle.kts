@@ -43,6 +43,8 @@ android {
                     ?: System.getenv("POCKET_BREW_KEY_ALIAS")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
                     ?: System.getenv("POCKET_BREW_KEY_PASSWORD")
+                enableV1Signing = true
+                enableV2Signing = true
             }
         }
     }
@@ -55,6 +57,8 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

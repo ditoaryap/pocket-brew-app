@@ -50,13 +50,14 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            keytool -list -keystore android/app/upload-keystore.jks -storepass "$KEYSTORE_PASSWORD"
             cat <<EOF > android/key.properties
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
           storeFile=upload-keystore.jks
           EOF
-            echo "Release keystore berhasil dimuat dari GitHub Secrets."
+            echo "Release keystore berhasil dimuat & diverifikasi dari GitHub Secrets."
           else
             echo "GitHub Secrets keystore belum diisi; menggunakan fallback signing."
           fi

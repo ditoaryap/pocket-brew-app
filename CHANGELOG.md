@@ -18,6 +18,15 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/id-ID/1.0.0/) 
 
 ---
 
+## [1.0.1+2] - 2026-11-22
+### Ditambahkan (Added)
+- **Logo & Adaptive Icon Resmi Pocket Brew**:
+  - Mengganti seluruh ikon bawaan Flutter di Android (`mipmap-mdpi` s/d `xxxhdpi`, `ic_launcher_round`, dan Vector Adaptive Icon `mipmap-anydpi-v26`), iOS (`AppIcon.appiconset`), dan Web (`favicon.png`, `Icon-192`, `Icon-512`) dengan logo resmi **Pocket Brew** (*V60 Cone + Diagonal Rib + Pocket Cradle + Crema Droplet*).
+- **Production Release Keystore & Android V1/V2 Signature**:
+  - Menandatangani `.apk` rilis dengan sertifikat produksi resmi **Pocket Brew (`RSA-2048`)** via GitHub Actions Secrets (bukan lagi *Android Debug Key*), serta merapikan `AndroidManifest.xml` (`allowBackup="false"`, `roundIcon`) dan `launch_background.xml` (`#17120F` bebas kilatan putih).
+
+---
+
 ## [1.0.0+1] - 2026-11-22
 ### Ditambahkan (Added)
 - **Beranda Launchpad Interaktif (`HomeScreen`)**:

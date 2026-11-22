@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Subtle inner barista dial ring inside 66dp safe zone -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,23 A31,31 0 1,1 53.99,23 Z"
+        android:strokeColor="#28FFF5EB"
+        android:strokeWidth="1.4" />
+    <!-- V60 Dripper Cone -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M37.4,37.8 L70.6,37.8 L57.8,58.3 L50.2,58.3 Z"
+        android:strokeColor="#FFFDF9"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="4.35" />
+    <!-- V60 Diagonal Rib -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M46.3,39.1 L52.7,56.4"
+        android:strokeColor="#E6FFFDF9"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.8" />
+    <!-- Pocket Cradle Curve -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M39.9,63.4 Q54.0,76.2 68.1,63.4"
+        android:strokeColor="#FFFDF9"
+        android:strokeLineCap="round"
+        android:strokeWidth="4.35" />
+    <!-- Warm Crema Coffee Droplet -->
+    <path
+        android:fillColor="#F5E2D9"
+        android:pathData="M54.0,60.6 Q58.5,66.8 54.0,70.2 Q49.5,66.8 54.0,60.6 Z" />
+</vector>

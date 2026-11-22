@@ -177,7 +177,7 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(find.text('Mau seduh apa, Dito?'), findsOneWidget);
     expect(find.textContaining('Meja Rumah'), findsNothing);
-    expect(find.text('Ethiopia Guji Uraga'), findsOneWidget);
+    expect(find.text('Ethiopia Guji Uraga'), findsWidgets);
     expect(find.text('Hot V60'), findsOneWidget);
     expect(find.text('Japanese Iced'), findsOneWidget);
     expect(find.text('Pilih Metode'), findsOneWidget);
@@ -206,18 +206,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Pilih Biji Kopi'), findsOneWidget);
     expect(find.textContaining('Tanpa Biji'), findsNothing);
-    await tester.tap(find.text('Kenya Nyeri AA'));
+    await tester.tap(find.text('Kenya Nyeri AA').last);
     await tester.pumpAndSettle();
     expect(
       container.read(pocketStoreProvider).activeBean?.id,
       'bean-kenya-nyeri',
     );
-    expect(find.text('Kenya Nyeri AA'), findsOneWidget);
+    expect(find.text('Kenya Nyeri AA'), findsWidgets);
 
     // Switch back to Ethiopia Guji Uraga
     await tester.tap(find.text('Ganti biji'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Ethiopia Guji Uraga'));
+    await tester.tap(find.text('Ethiopia Guji Uraga').last);
     await tester.pumpAndSettle();
 
     // 2. Settings button -> /settings
@@ -240,7 +240,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // 4. Metode & Resep card -> /methods
-    await tester.ensureVisible(find.text('Metode & Resep'));
+    final homeScroll = find
+        .descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.drag(homeScroll, const Offset(0, -240));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Metode & Resep'));
     await tester.pumpAndSettle();
     expect(find.byType(MethodsScreen), findsOneWidget);
@@ -265,10 +272,16 @@ void main() {
     // Return to Beranda tab -> toggle Japanese Iced on Beranda -> launch -> /brew in Iced mode
     await tester.tap(find.text('Beranda'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.descendant(
-      of: find.byType(HomeScreen),
-      matching: find.text('Japanese Iced'),
-    ));
+    await tester.drag(
+      find
+          .descendant(
+            of: find.byType(HomeScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+      const Offset(0, 400),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.descendant(
       of: find.byType(HomeScreen),
       matching: find.text('Japanese Iced'),
@@ -463,11 +476,9 @@ void main() {
         of: inQuickBrew,
         matching: find.text('Japanese Iced'),
       );
-      await tester.scrollUntilVisible(
-        icedTab,
-        -240,
-        scrollable: qbScrollable,
-      );
+      await tester.drag(qbScrollable, const Offset(0, 900));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(icedTab);
       await tester.tap(icedTab);
       await tester.pumpAndSettle();
 
@@ -530,6 +541,8 @@ void main() {
         220,
         scrollable: qbScrollable,
       );
+      await tester.drag(qbScrollable, const Offset(0, -180));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Mulai Brew'));
       await tester.pumpAndSettle();
 
@@ -656,6 +669,8 @@ void main() {
         180,
         scrollable: evalScroll,
       );
+      await tester.drag(evalScroll, const Offset(0, -160));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('White Peach ✓'));
       await tester.pumpAndSettle();
       expect(find.text('White Peach'), findsOneWidget);
@@ -681,11 +696,22 @@ void main() {
       final env = await pumpApp(tester);
       final router = env.router;
 
-      // 1. Settings screen has explicit Simpan CTA + Default Masa Paling Enak Biji copy
+      // 1. Settings screen has explicit Simpan CTA, Tes Suara, Hapus Data & Default Masa Paling Enak Biji copy
       router.push('/settings');
       await tester.pumpAndSettle();
       expect(find.text('Default Masa Paling Enak Biji'), findsOneWidget);
+      expect(find.text('Tes Suara'), findsOneWidget);
       expect(find.text('Simpan & Kembali'), findsOneWidget);
+      final settingsScroll = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.text('Hapus Data'),
+        200,
+        scrollable: settingsScroll,
+      );
+      expect(find.text('Hapus Data'), findsOneWidget);
+      await tester.drag(settingsScroll, const Offset(0, 600));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('°F'));
       await tester.tap(find.text('°F'));
       await tester.pumpAndSettle();
       expect(find.text('Simpan Pengaturan'), findsOneWidget);
@@ -693,7 +719,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);
 
-      // 2. Add Bean screen: single Berat Biji Saat Ini (no Baru/Terpakai, no seduhan lagi) & clear Masa Paling Enak (no Peak jargon!)
+      // 2. Add Bean screen: structured Notes 1 / Notes 2 inputs (no comma separation!), single Berat Biji Saat Ini
       router.push('/beans/add');
       await tester.pumpAndSettle();
       expect(find.text('Metode Pasca Panen (Proses)'), findsOneWidget);
@@ -712,13 +738,18 @@ void main() {
           )
           .first;
       await tester.scrollUntilVisible(
+        find.text('Berat Biji Saat Ini'),
+        220,
+        scrollable: addBeanScroll,
+      );
+      expect(find.text('Berat Biji Saat Ini'), findsOneWidget);
+      await tester.scrollUntilVisible(
         find.text('Atur Sendiri'),
         220,
         scrollable: addBeanScroll,
       );
       await tester.drag(addBeanScroll, const Offset(0, -140));
       await tester.pumpAndSettle();
-      expect(find.text('Berat Biji Saat Ini'), findsOneWidget);
       expect(find.text('Tanggal Sangrai & Masa Paling Enak'), findsOneWidget);
       expect(find.textContaining('Peak'), findsNothing);
       expect(find.text('Stok Cadangan'), findsOneWidget);
@@ -726,16 +757,47 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Mulai Enak'), findsOneWidget);
       expect(find.text('Sampai Hari'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Notes Rasa Kemasan'),
+        220,
+        scrollable: addBeanScroll,
+      );
+      expect(find.text('Notes Rasa Kemasan'), findsOneWidget);
+      expect(find.text('Notes 1'), findsOneWidget);
+      expect(find.text('Notes 2'), findsOneWidget);
+      expect(find.text('+ Tambah Note'), findsOneWidget);
+      expect(find.textContaining('pisahkan koma'), findsNothing);
       router.pop();
       await tester.pumpAndSettle();
 
-      // 3. Bean Detail has crisp Edit, Brew Biji Ini, Simpan Cadangan & Arsipkan Biji actions
+      // 3. Bean Detail has flexible stock input, Edit, Brew Biji Ini, Simpan Cadangan, Hapus Biji & NO Archive!
       router.push('/beans/bean-ethiopia-guji');
       await tester.pumpAndSettle();
       expect(find.text('Edit'), findsOneWidget);
+      expect(find.text('Koreksi Sisa Stok Aktual'), findsOneWidget);
+      expect(find.text('Arsipkan Biji'), findsNothing);
+      expect(find.textContaining('Arsip'), findsNothing);
+      // Enter custom flexible decimal stock value (e.g. 142.5)
+      await tester.enterText(find.byType(TextField).first, '142.5');
+      await tester.pumpAndSettle();
+      expect(find.text('Simpan Koreksi Stok (142.5g)'), findsOneWidget);
+      final beanDetailScroll = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.text('Hapus Biji'),
+        220,
+        scrollable: beanDetailScroll,
+      );
+      await tester.drag(beanDetailScroll, const Offset(0, -200));
+      await tester.pumpAndSettle();
       expect(find.text('Brew Biji Ini'), findsOneWidget);
       expect(find.text('Simpan Cadangan'), findsOneWidget);
-      expect(find.text('Arsipkan Biji'), findsOneWidget);
+      expect(find.text('Hapus Biji'), findsOneWidget);
+      // Tapping Hapus Biji opens confirmation dialog!
+      await tester.tap(find.text('Hapus Biji'));
+      await tester.pumpAndSettle();
+      expect(find.text('Hapus Biji Kopi?'), findsOneWidget);
+      await tester.tap(find.text('Batal'));
+      await tester.pumpAndSettle();
       router.pop();
       await tester.pumpAndSettle();
 
@@ -809,7 +871,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('1:16.7'), findsOneWidget);
 
-      // Test adding a stage starts at 0 ml WITHOUT redistributing existing stage 1 (still +50 ml)!
+      // Test adding a stage starts at 0 ml WITHOUT redistributing existing stage 1 (still +50 ml)
+      // AND exposes Judul Tahap rename field!
       final stagesScroll = find
           .descendant(
             of: find.byType(PourStageEditorScreen),
@@ -827,6 +890,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('+0 ml'), findsOneWidget);
       expect(find.text('+50 ml'), findsWidgets);
+      expect(find.text('Judul Tahap 6'), findsOneWidget);
 
       // Switch to Japanese Iced -> custom Es Batu grams visible!
       await tester.drag(stagesScroll, const Offset(0, 600));
@@ -964,6 +1028,17 @@ void main() {
       // Pour Stage Editor Dark @ 360dp
       router.push('/brew/stages');
       await tester.pumpAndSettle();
+      final stageDarkScroll = find
+          .descendant(
+            of: find.byType(PourStageEditorScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.text('Kecepatan & Durasi Tuangan'),
+        220,
+        scrollable: stageDarkScroll,
+      );
       expect(find.text('Kecepatan & Durasi Tuangan'), findsOneWidget);
       expect(find.textContaining('g/s'), findsNothing);
       expect(tester.takeException(), isNull);
@@ -1009,6 +1084,116 @@ void main() {
       router.go('/onboarding');
       await tester.pumpAndSettle();
       expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'v1.0.2 features: Brew session stage add/reset, Methods delete+restore, Settings clear data & Light 360dp zero overflow',
+    (tester) async {
+      final env = await pumpApp(tester, size: const Size(360, 800));
+      final container = env.container;
+      final router = env.router;
+
+      // Verify Light Mode @ 360dp zero overflow on Home, Brew, Beans, Log, Gear
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // 1. Brew Screen: inline session stage add & reset (outside preset!)
+      router.go('/brew');
+      await tester.pumpAndSettle();
+      final qbScrollable = find.descendant(
+        of: find.byType(QuickBrewScreen),
+        matching: find.byType(Scrollable),
+      );
+      await tester.scrollUntilVisible(
+        find.text('Tambah Tahap (Sesi Ini)'),
+        220,
+        scrollable: qbScrollable,
+      );
+      await tester.drag(qbScrollable, const Offset(0, -180));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tambah Tahap (Sesi Ini)'));
+      await tester.pumpAndSettle();
+      expect(find.text('Tambah Tahap 6 (Sesi Ini)'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, 'Tuangan Bonus');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tambahkan Tahap'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tuangan Bonus'), findsOneWidget);
+      expect(find.text('Tahap diubah sesi ini'), findsOneWidget);
+      expect(container.read(pocketStoreProvider).currentPlan.stages.length, 6);
+      // Original saved preset recipe must remain untouched at 5 stages!
+      expect(container.read(pocketStoreProvider).activeRecipe.stages.length, 5);
+      // Reset preset restores back to 5 stages
+      await tester.drag(qbScrollable, const Offset(0, 320));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Reset preset'));
+      await tester.tap(find.text('Reset preset'));
+      await tester.pumpAndSettle();
+      expect(container.read(pocketStoreProvider).currentPlan.stages.length, 5);
+      expect(find.text('Tahap diubah sesi ini'), findsNothing);
+
+      // 2. Bean Library has 2 tabs (Aktif & Cadangan), ZERO Arsip!
+      router.go('/beans');
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Aktif ('), findsOneWidget);
+      expect(find.textContaining('Cadangan ('), findsOneWidget);
+      expect(find.textContaining('Arsip'), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      // 3. Methods screen: delete an official recipe with confirmation modal & restore it
+      router.push('/methods');
+      await tester.pumpAndSettle();
+      final beforeCount = container.read(pocketStoreProvider).recipes.length;
+      await tester.tap(find.byIcon(Icons.delete_outline_rounded).first);
+      await tester.pumpAndSettle();
+      expect(find.text('Hapus Metode Resep?'), findsOneWidget);
+      await tester.tap(find.text('Hapus Resep'));
+      await tester.pumpAndSettle();
+      expect(
+        container.read(pocketStoreProvider).recipes.length,
+        beforeCount - 1,
+      );
+      final methodsScroll = find
+          .descendant(
+            of: find.byType(MethodsScreen),
+            matching: find.byType(Scrollable),
+          )
+          .last;
+      await tester.scrollUntilVisible(
+        find.text('Pulihkan Resep Bawaan yang Dihapus'),
+        220,
+        scrollable: methodsScroll,
+      );
+      await tester.drag(methodsScroll, const Offset(0, -140));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pulihkan Resep Bawaan yang Dihapus'));
+      await tester.pumpAndSettle();
+      expect(container.read(pocketStoreProvider).recipes.length, beforeCount);
+      router.pop();
+      await tester.pumpAndSettle();
+
+      // 4. Settings: Hapus Data wipes beans & logs cleanly after confirmation
+      router.push('/settings');
+      await tester.pumpAndSettle();
+      final settingsScroll = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.text('Hapus Data'),
+        220,
+        scrollable: settingsScroll,
+      );
+      await tester.drag(settingsScroll, const Offset(0, -240));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hapus Data'));
+      await tester.pumpAndSettle();
+      expect(find.text('Hapus Semua Data Lokal?'), findsOneWidget);
+      await tester.tap(find.text('Ya, Hapus Semua'));
+      await tester.pumpAndSettle();
+      expect(container.read(pocketStoreProvider).beans, isEmpty);
+      expect(container.read(pocketStoreProvider).logs, isEmpty);
       expect(tester.takeException(), isNull);
     },
   );

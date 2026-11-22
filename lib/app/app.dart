@@ -95,9 +95,10 @@ class PocketBrewApp extends ConsumerWidget {
   }
 }
 
-/// Editorial Barista Entrance Curtain:
-/// Plays a signature precision burr-dial & crema-glow reveal on app launch,
-/// then unmounts cleanly to zero overhead once completed.
+/// Artisan Pour-Over Welcome Entrance:
+/// Theme-aware (Soft Oat Light / Espresso Dusk Dark), calm 2.35s reveal with
+/// animated pour-over ripples, sweeping crema arc, rising aroma wisps, and
+/// staggered editorial typography before smoothly lifting into Beranda.
 class _PocketEntranceCurtain extends StatefulWidget {
   const _PocketEntranceCurtain({required this.child});
 
@@ -117,7 +118,7 @@ class _PocketEntranceCurtainState extends State<_PocketEntranceCurtain>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1420),
+      duration: const Duration(milliseconds: 2350),
     )..addStatusListener((status) {
         if (status == AnimationStatus.completed && mounted) {
           setState(() => _completed = true);
@@ -136,29 +137,60 @@ class _PocketEntranceCurtainState extends State<_PocketEntranceCurtain>
   Widget build(BuildContext context) {
     if (_completed) return widget.child;
 
+    final c = context.colors;
+    final isDark = c.isDark;
+
+    final bgColors = isDark
+        ? const [
+            Color(0xFF281F1A),
+            Color(0xFF171310),
+            Color(0xFF100D0B),
+          ]
+        : const [
+            Color(0xFFFFFCF7),
+            Color(0xFFF6F1E9),
+            Color(0xFFECE3D6),
+          ];
+
+    final emblemBg = isDark ? const Color(0xFF241D18) : const Color(0xFFFFFDF9);
+    final emblemBorder =
+        isDark ? const Color(0xFF3E322B) : const Color(0xFFE4D8C9);
+    final ringTrack =
+        isDark ? const Color(0xFF362B24) : const Color(0xFFE2D6C7);
+    final accent = c.brandTerracotta;
+    final accentInk = c.brandTerracottaInk;
+
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (context, child) {
         final t = _ctrl.value;
-        // Reveal transition phase (0.64 -> 1.0)
+
+        // Smooth lift & fade reveal phase (0.76 -> 1.0)
         final exitT =
-            Curves.easeInOutCubic.transform(((t - 0.64) / 0.36).clamp(0.0, 1.0));
+            Curves.easeInOutCubic.transform(((t - 0.76) / 0.24).clamp(0.0, 1.0));
         final curtainOpacity = (1.0 - exitT).clamp(0.0, 1.0);
-        final curtainScale = 1.0 + (exitT * 0.045);
-        final curtainSlideY = -22.0 * exitT;
+        final curtainSlideY = -28.0 * exitT;
+        final curtainScale = 1.0 + (exitT * 0.03);
 
-        // Crest & dial entrance phase (0.0 -> 0.58)
-        final crestIn =
-            PocketCurves.gentleSpring.transform((t / 0.42).clamp(0.0, 1.0));
-        final dialSweep =
-            Curves.easeOutCubic.transform((t / 0.62).clamp(0.0, 1.0));
-        final textIn =
-            Curves.easeOutCubic.transform(((t - 0.12) / 0.38).clamp(0.0, 1.0));
-        final pillIn =
-            Curves.easeOutCubic.transform(((t - 0.22) / 0.38).clamp(0.0, 1.0));
+        // Staggered entrance curves
+        final emblemIn =
+            PocketCurves.gentleSpring.transform((t / 0.30).clamp(0.0, 1.0));
+        final sweepProgress =
+            Curves.easeOutCubic.transform(((t - 0.05) / 0.56).clamp(0.0, 1.0));
+        final ripplePhase = Curves.easeOut.transform((t / 0.78).clamp(0.0, 1.0));
+        final titleIn =
+            Curves.easeOutCubic.transform(((t - 0.16) / 0.28).clamp(0.0, 1.0));
+        final ruleIn =
+            Curves.easeOutCubic.transform(((t - 0.26) / 0.26).clamp(0.0, 1.0));
+        final subtitleIn =
+            Curves.easeOutCubic.transform(((t - 0.30) / 0.28).clamp(0.0, 1.0));
+        final badgeIn =
+            Curves.easeOutCubic.transform(((t - 0.40) / 0.26).clamp(0.0, 1.0));
+        final barProgress =
+            Curves.easeInOutCubic.transform((t / 0.76).clamp(0.0, 1.0));
 
-        // Underlying app gentle scale-in as curtain lifts
-        final appScale = 0.985 + (0.015 * exitT);
+        // Underlying app gentle settle-in as curtain lifts
+        final appScale = 0.988 + (0.012 * exitT);
 
         return Stack(
           fit: StackFit.expand,
@@ -179,56 +211,97 @@ class _PocketEntranceCurtainState extends State<_PocketEntranceCurtain>
                       child: Transform.scale(
                         scale: curtainScale,
                         child: DecoratedBox(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: RadialGradient(
-                              center: Alignment(0.0, -0.18),
-                              radius: 1.05,
-                              colors: [
-                                Color(0xFF2B201A),
-                                Color(0xFF17120F),
-                                Color(0xFF100D0B),
-                              ],
-                              stops: [0.0, 0.58, 1.0],
+                              center: const Alignment(0.0, -0.22),
+                              radius: 1.15,
+                              colors: bgColors,
+                              stops: const [0.0, 0.56, 1.0],
                             ),
                           ),
                           child: SafeArea(
-                            child: Column(
-                              children: [
-                                const Spacer(flex: 5),
-                                // Precision Burr-Dial Ring + Pocket Brew Crest
-                                Transform.scale(
-                                  scale: 0.72 + (0.28 * crestIn),
-                                  child: SizedBox(
-                                    width: 124,
-                                    height: 124,
-                                    child: CustomPaint(
-                                      painter: _BaristaDialRingPainter(
-                                        progress: dialSweep,
-                                      ),
-                                      child: const Center(
-                                        child: PocketBrewMark(
-                                          size: 72,
-                                          backgroundColor: Color(0xFFC05E3A),
-                                          foregroundColor: Color(0xFFFFFDF9),
-                                          dropColor: Color(0xFFF6E3DA),
+                            child: LayoutBuilder(
+                              builder: (context, box) {
+                                final isCompactH = box.maxHeight < 640;
+                                final ringSize = isCompactH ? 142.0 : 164.0;
+                                final markSize = isCompactH ? 66.0 : 76.0;
+                                final pedestalSize = isCompactH ? 92.0 : 104.0;
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 28,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Spacer(flex: 5),
+
+                                      // Sculpted Emblem + Rippling Pour-Over Rings
+                                      Transform.scale(
+                                        scale: 0.78 + (0.22 * emblemIn),
+                                        child: Opacity(
+                                          opacity: emblemIn.clamp(0.0, 1.0),
+                                          child: SizedBox(
+                                            width: ringSize,
+                                            height: ringSize,
+                                            child: CustomPaint(
+                                              painter: _ArtisanPourSplashPainter(
+                                                sweep: sweepProgress,
+                                                ripple: ripplePhase,
+                                                accentColor: accent,
+                                                sageColor: c.brandSage,
+                                                trackColor: ringTrack,
+                                                isDark: isDark,
+                                              ),
+                                              child: Center(
+                                                child: Container(
+                                                  width: pedestalSize,
+                                                  height: pedestalSize,
+                                                  decoration: BoxDecoration(
+                                                    color: emblemBg,
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                      color: emblemBorder,
+                                                      width: 1.2,
+                                                    ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: accent.withValues(
+                                                          alpha:
+                                                              isDark ? 0.18 : 0.14,
+                                                        ),
+                                                        blurRadius: 28,
+                                                        spreadRadius: 2,
+                                                        offset:
+                                                            const Offset(0, 8),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: PocketBrewMark(
+                                                    size: markSize,
+                                                    backgroundColor:
+                                                        const Color(0xFFC05E3A),
+                                                    foregroundColor:
+                                                        const Color(0xFFFFFDF9),
+                                                    dropColor:
+                                                        const Color(0xFFF6E3DA),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 22),
-                                // Editorial Wordmark & Atelier Tagline
-                                Opacity(
-                                  opacity: textIn,
-                                  child: Transform.translate(
-                                    offset: Offset(0, (1.0 - textIn) * 14),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          FittedBox(
+
+                                      SizedBox(height: isCompactH ? 20 : 28),
+
+                                      // Wordmark
+                                      Opacity(
+                                        opacity: titleIn,
+                                        child: Transform.translate(
+                                          offset:
+                                              Offset(0, (1.0 - titleIn) * 14),
+                                          child: FittedBox(
                                             fit: BoxFit.scaleDown,
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -240,125 +313,135 @@ class _PocketEntranceCurtainState extends State<_PocketEntranceCurtain>
                                                 Text(
                                                   'pocket brew',
                                                   style: PocketTheme.ui(
-                                                    size: 28,
+                                                    size: 31,
                                                     weight: 800,
-                                                    letterSpacing: -0.6,
-                                                    color: const Color(
-                                                      0xFFFAF5EE,
-                                                    ),
+                                                    letterSpacing: -0.75,
+                                                    color: c.textPrimary,
                                                   ),
                                                 ),
                                                 Text(
                                                   '.',
                                                   style: PocketTheme.ui(
-                                                    size: 30,
+                                                    size: 33,
                                                     weight: 800,
-                                                    color: const Color(
-                                                      0xFFD9724C,
-                                                    ),
+                                                    color: accent,
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(height: 6),
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              'MANUAL POUR-OVER COMPANION',
-                                              style: PocketTheme.mono(
-                                                size: 10.2,
-                                                weight: FontWeight.w700,
-                                                letterSpacing: 2.3,
-                                                color:
-                                                    const Color(0xFFD6A48C),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                // Specialty Capability Pill
-                                Opacity(
-                                  opacity: pillIn,
-                                  child: Transform.translate(
-                                    offset: Offset(0, (1.0 - pillIn) * 10),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
+                                      const SizedBox(height: 12),
+
+                                      // Expanding Warm Hairline Accent Rule
+                                      Container(
+                                        width: 44 * ruleIn,
+                                        height: 2.5,
+                                        decoration: BoxDecoration(
+                                          color: accent,
+                                          borderRadius:
+                                              BorderRadius.circular(999),
+                                        ),
                                       ),
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 7,
+                                      const SizedBox(height: 12),
+
+                                      // Calm Editorial Tagline
+                                      Opacity(
+                                        opacity: subtitleIn,
+                                        child: Transform.translate(
+                                          offset: Offset(
+                                            0,
+                                            (1.0 - subtitleIn) * 10,
                                           ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF261E19),
-                                            borderRadius:
-                                                BorderRadius.circular(999),
-                                            border: Border.all(
-                                              color: const Color(0xFF43342B),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
+                                          child: Column(
                                             children: [
-                                              Container(
-                                                width: 6,
-                                                height: 6,
-                                                decoration:
-                                                    const BoxDecoration(
-                                                  color: Color(0xFF6A9A78),
-                                                  shape: BoxShape.circle,
+                                              Text(
+                                                'Seduh manual presisi,\ntenang setiap pagi.',
+                                                textAlign: TextAlign.center,
+                                                style: PocketTheme.ui(
+                                                  size: 14.5,
+                                                  weight: 600,
+                                                  height: 1.4,
+                                                  color: c.textSecondary,
                                                 ),
                                               ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'Hot V60  ·  Japanese Iced  ·  Δμm Click',
-                                                style: PocketTheme.ui(
-                                                  size: 11.2,
-                                                  weight: 600,
-                                                  color: const Color(
-                                                    0xFFD4C6B8,
-                                                  ),
+                                              const SizedBox(height: 16),
+                                              Opacity(
+                                                opacity: badgeIn,
+                                                child: Wrap(
+                                                  spacing: 8,
+                                                  runSpacing: 6,
+                                                  alignment:
+                                                      WrapAlignment.center,
+                                                  children: [
+                                                    _SplashTag(
+                                                      label: 'Hot V60',
+                                                      dotColor: accent,
+                                                      bg: c.tintTerracotta,
+                                                      fg: accentInk,
+                                                    ),
+                                                    _SplashTag(
+                                                      label: 'Japanese Iced',
+                                                      dotColor: c.brandIce,
+                                                      bg: c.tintIce,
+                                                      fg: c.brandIce,
+                                                    ),
+                                                    _SplashTag(
+                                                      label: '100% Offline',
+                                                      dotColor: c.brandSage,
+                                                      bg: c.tintSage,
+                                                      fg: c.brandSage,
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                                const Spacer(flex: 6),
-                                Opacity(
-                                  opacity: pillIn * 0.75,
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      24,
-                                      0,
-                                      24,
-                                      18,
-                                    ),
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        'Pocket Brew ${PocketVersion.fullLabel} · 100% Offline',
-                                        style: PocketTheme.mono(
-                                          size: 10,
-                                          weight: FontWeight.w600,
-                                          color: const Color(0xFF8C7B6E),
+
+                                      const Spacer(flex: 6),
+
+                                      // Minimal Progress Ribbon + Version Stamp
+                                      Opacity(
+                                        opacity: badgeIn,
+                                        child: Column(
+                                          children: [
+                                            SizedBox(
+                                              width: 112,
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                                child: LinearProgressIndicator(
+                                                  value: barProgress,
+                                                  minHeight: 3,
+                                                  backgroundColor: ringTrack,
+                                                  color: accent,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                'POCKET BREW ${PocketVersion.fullLabel.toUpperCase()}',
+                                                style: PocketTheme.mono(
+                                                  size: 9.8,
+                                                  weight: FontWeight.w700,
+                                                  letterSpacing: 1.6,
+                                                  color: c.textTertiary,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 18),
+                                          ],
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -375,75 +458,157 @@ class _PocketEntranceCurtainState extends State<_PocketEntranceCurtain>
   }
 }
 
-class _BaristaDialRingPainter extends CustomPainter {
-  const _BaristaDialRingPainter({required this.progress});
+class _SplashTag extends StatelessWidget {
+  const _SplashTag({
+    required this.label,
+    required this.dotColor,
+    required this.bg,
+    required this.fg,
+  });
 
-  final double progress;
+  final String label;
+  final Color dotColor;
+  final Color bg;
+  final Color fg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5.5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5.5,
+            height: 5.5,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: PocketTheme.ui(
+              size: 11,
+              weight: 700,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArtisanPourSplashPainter extends CustomPainter {
+  const _ArtisanPourSplashPainter({
+    required this.sweep,
+    required this.ripple,
+    required this.accentColor,
+    required this.sageColor,
+    required this.trackColor,
+    required this.isDark,
+  });
+
+  final double sweep;
+  final double ripple;
+  final Color accentColor;
+  final Color sageColor;
+  final Color trackColor;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final outerR = size.width / 2 - 4;
-    final arcR = outerR - 8;
+    final maxR = size.width / 2 - 4;
+    final primaryR = maxR - 12;
 
-    // 36 Precision Burr Click Ticks around outer perimeter
-    const tickCount = 36;
-    final activeTicks = (tickCount * progress).round();
-    for (int i = 0; i < tickCount; i++) {
-      final angle = -math.pi / 2 + (2 * math.pi * i / tickCount);
-      final isMajor = i % 3 == 0;
-      final isLit = i <= activeTicks;
-      final len = isMajor ? 5.5 : 3.2;
-      final p1 = Offset(
-        center.dx + (outerR - len) * math.cos(angle),
-        center.dy + (outerR - len) * math.sin(angle),
-      );
-      final p2 = Offset(
-        center.dx + outerR * math.cos(angle),
-        center.dy + outerR * math.sin(angle),
-      );
-      canvas.drawLine(
-        p1,
-        p2,
+    // 1. Expanding outer pour-over bloom ripple
+    final rippleR = primaryR + (14.0 * ripple);
+    final rippleAlpha = ((1.0 - ripple) * (isDark ? 0.34 : 0.28)).clamp(0.0, 1.0);
+    if (rippleAlpha > 0.01) {
+      canvas.drawCircle(
+        center,
+        rippleR,
         Paint()
-          ..color = isLit
-              ? (isMajor
-                  ? const Color(0xFFE0855E)
-                  : const Color(0xFFA06A50))
-              : const Color(0xFF362B24)
-          ..strokeWidth = isMajor ? 1.7 : 1.1
-          ..strokeCap = StrokeCap.round,
+          ..color = accentColor.withValues(alpha: rippleAlpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4,
       );
     }
 
-    // Subtle track circle
+    // 2. Subtle precision dial track
     canvas.drawCircle(
       center,
-      arcR,
+      primaryR,
       Paint()
-        ..color = const Color(0xFF2D231D)
+        ..color = trackColor
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0,
+        ..strokeWidth = 1.6,
     );
 
-    // Sweeping Crema Arc
-    if (progress > 0.01) {
-      final rect = Rect.fromCircle(center: center, radius: arcR);
+    // 3. 12 Minimalist Compass / Burr Dots on outer ring
+    for (int i = 0; i < 12; i++) {
+      final angle = -math.pi / 2 + (2 * math.pi * i / 12);
+      final isCard = i % 3 == 0;
+      final isLit = (i / 12.0) <= sweep;
+      final pos = Offset(
+        center.dx + (maxR - 2) * math.cos(angle),
+        center.dy + (maxR - 2) * math.sin(angle),
+      );
+      canvas.drawCircle(
+        pos,
+        isCard ? 2.1 : 1.25,
+        Paint()
+          ..color = isLit
+              ? (isCard ? accentColor : accentColor.withValues(alpha: 0.65))
+              : trackColor,
+      );
+    }
+
+    // 4. Sweeping Pour-Over Crema Arc + Glowing Leading Drop
+    if (sweep > 0.01) {
+      final sweepAngle = 2 * math.pi * sweep;
+      final rect = Rect.fromCircle(center: center, radius: primaryR);
       canvas.drawArc(
         rect,
         -math.pi / 2,
-        2 * math.pi * progress,
+        sweepAngle,
         false,
         Paint()
-          ..color = const Color(0xFFD9724C)
+          ..color = accentColor
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.4
+          ..strokeWidth = 2.6
           ..strokeCap = StrokeCap.round,
+      );
+
+      // Leading glowing tip dot
+      final tipAngle = -math.pi / 2 + sweepAngle;
+      final tip = Offset(
+        center.dx + primaryR * math.cos(tipAngle),
+        center.dy + primaryR * math.sin(tipAngle),
+      );
+      canvas.drawCircle(
+        tip,
+        5.5,
+        Paint()..color = accentColor.withValues(alpha: 0.22),
+      );
+      canvas.drawCircle(
+        tip,
+        2.7,
+        Paint()..color = sageColor,
       );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _BaristaDialRingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _ArtisanPourSplashPainter oldDelegate) =>
+      oldDelegate.sweep != sweep ||
+      oldDelegate.ripple != ripple ||
+      oldDelegate.isDark != isDark;
 }

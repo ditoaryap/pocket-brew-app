@@ -63,8 +63,10 @@ class HomeScreen extends ConsumerWidget {
     final state = ref.watch(pocketStoreProvider);
     final notifier = ref.read(pocketStoreProvider.notifier);
 
-    final activeBeans = state.beans.where((b) => !b.isArchived).toList();
-    final heroBean = state.activeBean ?? activeBeans.firstOrNull;
+    final activeBeans = state.beans.where((b) => !b.isFrozen).toList();
+    final heroBean = state.activeBean ??
+        activeBeans.firstOrNull ??
+        state.beans.firstOrNull;
     final heroStatus = heroBean != null
         ? BeanRestingCalculator.evaluate(bean: heroBean, prefs: state.prefs)
         : null;
@@ -88,90 +90,64 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 102),
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 102),
           children: [
-            // 1. WARM, AIRY EDITORIAL HEADER (No rigid box, no Meja Rumah!)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: accent,
-                              shape: BoxShape.circle,
-                            ),
+            // 1. COMPACT, PROPORTIONAL EDITORIAL HEADER (Light & Dark consistent)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: c.surfaceCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: c.borderSubtle),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const PocketBrewMark(size: 38),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Mau seduh apa, ${state.prefs.userName}?',
+                          style: PocketTheme.ui(
+                            size: 16.5,
+                            weight: 800,
+                            height: 1.2,
+                            letterSpacing: -0.25,
+                            color: c.textPrimary,
                           ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              '${_greeting()} · Pocket Brew',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: PocketTheme.ui(
-                                size: 12,
-                                weight: 700,
-                                letterSpacing: 0.1,
-                                color: accentInk,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Mau seduh apa, ${state.prefs.userName}?',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: PocketTheme.ui(
-                          size: 24,
-                          weight: 800,
-                          height: 1.16,
-                          letterSpacing: -0.4,
-                          color: c.textPrimary,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      PocketTapScale(
-                        onTap: () => context.go('/gear'),
-                        pressedScale: 0.96,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: c.surfaceElevated,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
+                        const SizedBox(height: 3),
+                        PocketTapScale(
+                          onTap: () => context.go('/gear'),
+                          pressedScale: 0.97,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              PocketIcon(
-                                PocketIconType.v60,
-                                size: 13,
-                                color: c.textSecondary,
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: accent,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                               const SizedBox(width: 5),
                               Flexible(
                                 child: Text(
-                                  '${state.activeGrinder.model} · ${_shortDripperName(state.activeDripper.name)}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  '${_greeting()} · ${state.activeGrinder.model} · ${_shortDripperName(state.activeDripper.name)}',
                                   style: PocketTheme.ui(
-                                    size: 11.5,
+                                    size: 11.2,
                                     weight: 600,
+                                    height: 1.25,
                                     color: c.textSecondary,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 3),
                               PocketIcon(
                                 PocketIconType.chevronRight,
                                 size: 12,
@@ -180,43 +156,33 @@ class HomeScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const PocketBrewMark(size: 36),
-                        const SizedBox(width: 7),
-                        PocketTapScale(
-                          onTap: () => context.push('/settings'),
-                          pressedScale: 0.92,
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: c.surfaceElevated,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: PocketIcon(
-                              PocketIconType.sliders,
-                              size: 17,
-                              color: c.textPrimary,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(width: 8),
+                  PocketTapScale(
+                    onTap: () => context.push('/settings'),
+                    pressedScale: 0.92,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: c.surfaceElevated,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: c.borderSubtle),
+                      ),
+                      alignment: Alignment.center,
+                      child: PocketIcon(
+                        PocketIconType.sliders,
+                        size: 17,
+                        color: c.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // 2. HERO SHORTCUT LAUNCHPAD CARD (Mode + Active Bean + Quick Method Picker + Launch!)
             PocketEntrance(
@@ -296,25 +262,23 @@ class HomeScreen extends ConsumerWidget {
                                   ],
                                   Text(
                                     heroBean?.name ?? 'Seduhan Bebas (V60)',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: PocketTheme.ui(
-                                      size: 20,
+                                      size: 19.5,
                                       weight: 800,
+                                      height: 1.2,
                                       letterSpacing: -0.25,
                                       color: c.textPrimary,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 3),
                                   Text(
                                     heroBean != null
-                                        ? '${heroBean.process} · ${heroBean.roastLevel.shortLabel} · ${heroBean.remainingG.round()}g · ${heroBean.tastingNotes.take(2).join(', ')}'
+                                        ? '${heroBean.process} · ${heroBean.roastLevel.shortLabel} · ${heroBean.remainingG.round()}g${heroBean.tastingNotes.isNotEmpty ? ' · ${heroBean.tastingNotes.take(2).join(', ')}' : ''}'
                                         : state.activeRecipe.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: PocketTheme.ui(
                                       size: 11.8,
                                       weight: 500,
+                                      height: 1.35,
                                       color: c.textSecondary,
                                     ),
                                   ),
@@ -563,12 +527,12 @@ class HomeScreen extends ConsumerWidget {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          b.name.split(' ').take(2).join(' '),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                          b.name,
+                                          maxLines: 2,
                                           style: PocketTheme.ui(
-                                            size: 13.5,
+                                            size: 13,
                                             weight: 700,
+                                            height: 1.2,
                                             color: c.textPrimary,
                                           ),
                                         ),
@@ -602,11 +566,10 @@ class HomeScreen extends ConsumerWidget {
                                     isAlert
                                         ? 'Stok hampir habis · Koreksi →'
                                         : st.badgeText,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: PocketTheme.ui(
-                                      size: 11,
+                                      size: 10.8,
                                       weight: isAlert ? 600 : 500,
+                                      height: 1.25,
                                       color: isAlert
                                           ? c.brandHoney
                                           : c.textTertiary,
@@ -663,8 +626,6 @@ class HomeScreen extends ConsumerWidget {
                               const SizedBox(height: 8),
                               Text(
                                 'Metode & Resep',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                                 style: PocketTheme.ui(
                                   size: 13.5,
                                   weight: 700,
@@ -674,11 +635,10 @@ class HomeScreen extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(
                                 '$proCount resep pro · $customCount buatanmu',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                                 style: PocketTheme.ui(
                                   size: 11.5,
                                   weight: 400,
+                                  height: 1.3,
                                   color: c.textSecondary,
                                 ),
                               ),
@@ -717,8 +677,6 @@ class HomeScreen extends ConsumerWidget {
                               const SizedBox(height: 8),
                               Text(
                                 'Belajar Seduh',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                                 style: PocketTheme.ui(
                                   size: 13.5,
                                   weight: 700,
@@ -728,11 +686,10 @@ class HomeScreen extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(
                                 'Biji, tuangan & alat →',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                                 style: PocketTheme.ui(
                                   size: 11.5,
                                   weight: 500,
+                                  height: 1.3,
                                   color: c.textPrimary,
                                 ),
                               ),
@@ -781,20 +738,17 @@ class HomeScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Terakhir · ${latestLog.beanName.split(' ').take(2).join(' ')} (${latestLog.mode.shortBadge})',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              'Terakhir · ${latestLog.beanName} (${latestLog.mode.shortBadge})',
                               style: PocketTheme.ui(
                                 size: 13,
                                 weight: 600,
+                                height: 1.25,
                                 color: c.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 1),
+                            const SizedBox(height: 2),
                             Text(
                               '${latestLog.clickSetting} klik · ${BrewRecipeScaler.formatLiquidCompact(latestLog.totalLiquidG, state.prefs.unitMode)} · ${BrewRecipeScaler.formatShortDuration(latestLog.actualDrawdownSec)} · ★ ${latestLog.rating.toStringAsFixed(1)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: PocketTheme.mono(
                                 size: 11,
                                 color: c.textSecondary,

@@ -539,16 +539,18 @@ class PocketButton extends StatelessWidget {
               const SizedBox(width: 7),
             ],
             Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: PocketTheme.ui(
-                  size: fontSize,
-                  weight: fontWeight,
-                  color: foregroundColor,
-                  height: 1.15,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: PocketTheme.ui(
+                    size: fontSize,
+                    weight: fontWeight,
+                    color: foregroundColor,
+                    height: 1.15,
+                  ),
                 ),
               ),
             ),

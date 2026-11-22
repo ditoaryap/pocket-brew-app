@@ -8,6 +8,7 @@ import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/bean_picker_sheet.dart';
 import '../../core/widgets/canvas/click_ruler_widget.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/bean_resting_calculator.dart';
@@ -188,6 +189,111 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
     );
   }
 
+  /// Recomputes normalized cumulative % across stages from per-stage water volumes.
+  List<PourStage> _rebuildSessionStages(
+    List<PourStage> stages,
+    List<double> stageWaters,
+  ) {
+    final total = stageWaters.fold<double>(0.0, (s, w) => s + w);
+    double running = 0.0;
+    return List.generate(stages.length, (i) {
+      running += stageWaters[i];
+      final pct = (i == stages.length - 1 || total <= 0)
+          ? 1.0
+          : (running / total).clamp(0.05, 0.99);
+      return stages[i].copyWith(order: i + 1, targetCumulativePct: pct);
+    });
+  }
+
+  void _openSessionStageSheet(
+    BuildContext context, {
+    required ScaledBrewPlan plan,
+    required UnitMode unitMode,
+    required Color accentColor,
+    int? editIndex,
+  }) {
+    final notifier = ref.read(pocketStoreProvider.notifier);
+    final existingStages = plan.stages.map((s) => s.stage).toList();
+    final existingWaters = plan.stages.map((s) => s.deltaWaterG).toList();
+    final isEdit = editIndex != null && editIndex < existingStages.length;
+
+    final PourStage initialStage;
+    final double initialWater;
+    if (isEdit) {
+      initialStage = existingStages[editIndex];
+      initialWater = existingWaters[editIndex];
+    } else {
+      final last = existingStages.isNotEmpty ? existingStages.last : null;
+      final start = last?.endSec ?? 0;
+      final nextOrder = existingStages.length + 1;
+      initialStage = PourStage(
+        order: nextOrder,
+        label: 'Tuangan $nextOrder',
+        startSec: start,
+        pourEndSec: start + 12,
+        endSec: start + 35,
+        targetCumulativePct: 1.0,
+        pattern: PourPattern.spiral,
+        rate: PourRate.medium,
+        cue: 'Tuang spiral stabil di tengah bed kopi.',
+      );
+      initialWater = 40.0;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _SessionStageSheet(
+        isEdit: isEdit,
+        stageNumber: isEdit ? editIndex + 1 : existingStages.length + 1,
+        initialStage: initialStage,
+        initialWaterMl: initialWater,
+        unitMode: unitMode,
+        accentColor: accentColor,
+        onSave: (updatedStage, waterMl) {
+          final nextStages = List<PourStage>.from(existingStages);
+          final nextWaters = List<double>.from(existingWaters);
+          if (isEdit) {
+            nextStages[editIndex] = updatedStage;
+            nextWaters[editIndex] = waterMl;
+          } else {
+            nextStages.add(updatedStage);
+            nextWaters.add(waterMl);
+          }
+          notifier.setSessionStages(
+            _rebuildSessionStages(nextStages, nextWaters),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteSessionStage(
+    BuildContext context, {
+    required ScaledBrewPlan plan,
+    required int index,
+  }) async {
+    if (plan.stages.length <= 1) return;
+    final st = plan.stages[index].stage;
+    final ok = await showPocketDeleteDialog(
+      context,
+      title: 'Hapus Tahap Sesi Ini?',
+      message:
+          'Hapus "${st.label}" hanya untuk sesi seduh kali ini? Preset resep aslinya tidak akan berubah.',
+      confirmLabel: 'Hapus Tahap',
+    );
+    if (!ok) return;
+    final nextStages = plan.stages.map((s) => s.stage).toList()
+      ..removeAt(index);
+    final nextWaters = plan.stages.map((s) => s.deltaWaterG).toList()
+      ..removeAt(index);
+    ref.read(pocketStoreProvider.notifier).setSessionStages(
+          _rebuildSessionStages(nextStages, nextWaters),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -212,8 +318,9 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
     );
     final approxUm =
         DeltaMicronGrinderEngine.estimateMicrons(grinder, draft.clickSetting);
-    final activeBean =
-        state.activeBean ?? state.beans.where((b) => !b.isArchived).firstOrNull;
+    final activeBean = state.activeBean ??
+        state.beans.where((b) => !b.isFrozen).firstOrNull ??
+        state.beans.firstOrNull;
     final beanInfo = activeBean != null
         ? BeanRestingCalculator.evaluate(
             bean: activeBean,
@@ -327,21 +434,18 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
                       children: [
                         Text(
                           activeBean?.name ?? 'Pilih Biji Kopi',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: PocketTheme.ui(
                             size: 13.5,
                             weight: 700,
+                            height: 1.25,
                             color: c.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 1),
+                        const SizedBox(height: 2),
                         Text(
                           activeBean != null && beanInfo != null
                               ? '${activeBean.remainingG.round()}g stok · ${beanInfo.badgeText} · ${activeBean.process}'
                               : 'Ketuk untuk pilih atau tambah biji kopi',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: PocketTheme.mono(
                             size: 11,
                             weight: FontWeight.w400,
@@ -1066,11 +1170,10 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
                                 isIced
                                     ? grinder.fullName
                                     : '${grinder.fullName} · ${grinder.umPerClick.round()} μm',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                                 style: PocketTheme.ui(
                                   size: 12,
                                   weight: 600,
+                                  height: 1.25,
                                   color: c.textSecondary,
                                 ),
                               ),
@@ -1238,7 +1341,7 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
                         child: _QuickKpi(
                           label: 'Target Waktu',
                           value:
-                              '~${BrewRecipeScaler.formatShortDuration(recipe.targetDrawdownSec)}',
+                              '~${BrewRecipeScaler.formatShortDuration(state.activeTargetDrawdownSec)}',
                           compact: isIced,
                         ),
                       ),
@@ -1249,7 +1352,7 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
             ),
             const SizedBox(height: 10),
 
-            // VERTICAL POUR STAGES SCHEDULE CARD (Clean, scannable top-to-bottom list!)
+            // VERTICAL POUR STAGES SCHEDULE CARD (With Session-Only Add / Edit / Delete!)
             PocketCard(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
               radius: 20,
@@ -1259,18 +1362,53 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(
-                          '${_shortRecipeTitle(recipe.name)} · ${plan.stages.length} Tahap',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: PocketTheme.ui(
-                            size: 13.5,
-                            weight: 700,
-                            color: c.textPrimary,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_shortRecipeTitle(recipe.name)} · ${plan.stages.length} Tahap',
+                              style: PocketTheme.ui(
+                                size: 13.5,
+                                weight: 700,
+                                height: 1.25,
+                                color: c.textPrimary,
+                              ),
+                            ),
+                            if (state.hasSessionStageOverrides) ...[
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  PocketPill(
+                                    label: 'Tahap diubah sesi ini',
+                                    height: 20,
+                                    fontSize: 9.8,
+                                    backgroundColor: c.tintSage,
+                                    foregroundColor: c.brandSage,
+                                  ),
+                                  PocketTapScale(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      notifier.resetSessionStages();
+                                    },
+                                    child: Text(
+                                      'Reset preset',
+                                      style: PocketTheme.ui(
+                                        size: 10.5,
+                                        weight: 700,
+                                        color: accentInk,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1288,13 +1426,13 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
                   Text(
-                    'Preset metode aktif — bebas ubah dosis, rasio, klik & suhu di atas tanpa mengubah preset aslinya.',
+                    'Ketuk tahap untuk ubah judul/air khusus sesi ini, atau tambah/hapus tahap tanpa mengubah preset asli.',
                     style: PocketTheme.ui(
                       size: 10.8,
                       weight: 500,
-                      height: 1.35,
+                      height: 1.38,
                       color: c.textTertiary,
                     ),
                   ),
@@ -1329,7 +1467,7 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  // Clean Vertical Step-by-Step Pour List with practical `ml dlm X dtk` pace!
+                  // Clean Vertical Step-by-Step Pour List (tappable to edit, deletable for this session!)
                   ...List.generate(plan.stages.length, (i) {
                     final s = plan.stages[i];
                     final isBloom = i == 0;
@@ -1339,66 +1477,151 @@ class _QuickBrewScreenState extends ConsumerState<QuickBrewScreen> {
                       padding: EdgeInsets.only(
                         bottom: i < plan.stages.length - 1 ? 8 : 0,
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: dotColor.withValues(alpha: 0.14),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '${s.stage.order}',
-                              style: PocketTheme.mono(
-                                size: 10,
-                                weight: FontWeight.w700,
-                                color: isBloom ? c.brandSage : accentInk,
-                              ),
-                            ),
+                      child: PocketTapScale(
+                        pressedScale: 0.985,
+                        onTap: () => _openSessionStageSheet(
+                          context,
+                          plan: plan,
+                          unitMode: state.prefs.unitMode,
+                          accentColor: accent,
+                          editIndex: i,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
                           ),
-                          const SizedBox(width: 9),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  s.stage.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: PocketTheme.ui(
-                                    size: 12,
-                                    weight: 600,
-                                    color: c.textPrimary,
-                                  ),
+                          decoration: BoxDecoration(
+                            color: c.isDark
+                                ? c.surfaceElevated.withValues(alpha: 0.6)
+                                : c.surfaceCanvas.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: dotColor.withValues(alpha: 0.16),
+                                  shape: BoxShape.circle,
                                 ),
-                                Text(
-                                  '${BrewRecipeScaler.formatShortDuration(s.stage.startSec)} · Tuang ${BrewRecipeScaler.formatPourPace(s.deltaWaterG, pourSec, state.prefs.unitMode)}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${s.stage.order}',
                                   style: PocketTheme.mono(
                                     size: 10,
-                                    weight: FontWeight.w500,
-                                    color: c.textTertiary,
+                                    weight: FontWeight.w700,
+                                    color: isBloom ? c.brandSage : accentInk,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 9),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      s.stage.label,
+                                      style: PocketTheme.ui(
+                                        size: 12.2,
+                                        weight: 700,
+                                        height: 1.25,
+                                        color: c.textPrimary,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${BrewRecipeScaler.formatShortDuration(s.stage.startSec)} · Tuang ${BrewRecipeScaler.formatPourPace(s.deltaWaterG, pourSec, state.prefs.unitMode)}',
+                                      style: PocketTheme.mono(
+                                        size: 10,
+                                        weight: FontWeight.w500,
+                                        color: c.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '→ ${BrewRecipeScaler.formatLiquidCompact(s.cumulativeWaterG, state.prefs.unitMode)}',
+                                style: PocketTheme.mono(
+                                  size: 11.5,
+                                  weight: FontWeight.w700,
+                                  color: isBloom ? c.brandSage : accentInk,
+                                ),
+                              ),
+                              if (plan.stages.length > 1) ...[
+                                const SizedBox(width: 6),
+                                PocketTapScale(
+                                  onTap: () => _confirmDeleteSessionStage(
+                                    context,
+                                    plan: plan,
+                                    index: i,
+                                  ),
+                                  child: Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          c.statusError.withValues(alpha: 0.11),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 14,
+                                      color: c.statusError,
+                                    ),
                                   ),
                                 ),
                               ],
-                            ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '→ ${BrewRecipeScaler.formatLiquidCompact(s.cumulativeWaterG, state.prefs.unitMode)}',
-                            style: PocketTheme.mono(
-                              size: 11.5,
-                              weight: FontWeight.w700,
-                              color: isBloom ? c.brandSage : accentInk,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     );
                   }),
+                  const SizedBox(height: 10),
+                  PocketTapScale(
+                    onTap: () => _openSessionStageSheet(
+                      context,
+                      plan: plan,
+                      unitMode: state.prefs.unitMode,
+                      accentColor: accent,
+                    ),
+                    child: Container(
+                      height: 38,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: c.surfaceElevated,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: c.borderSubtle),
+                      ),
+                      alignment: Alignment.center,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PocketIcon(
+                              PocketIconType.plus,
+                              size: 14,
+                              color: accentInk,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Tambah Tahap (Sesi Ini)',
+                              style: PocketTheme.ui(
+                                size: 12,
+                                weight: 700,
+                                color: accentInk,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -2633,8 +2856,6 @@ class _PreBrewChecklistSheetState extends State<_PreBrewChecklistSheet> {
                         const SizedBox(height: 1),
                         Text(
                           'Urutan persiapan sebelum tuangan pertama',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: PocketTheme.ui(
                             size: 11.5,
                             weight: 500,
@@ -2796,6 +3017,217 @@ class _PreBrewChecklistSheetState extends State<_PreBrewChecklistSheet> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet to add or edit a pour stage for the CURRENT brew session only
+/// (leaves saved recipe presets untouched).
+class _SessionStageSheet extends StatefulWidget {
+  const _SessionStageSheet({
+    required this.isEdit,
+    required this.stageNumber,
+    required this.initialStage,
+    required this.initialWaterMl,
+    required this.unitMode,
+    required this.accentColor,
+    required this.onSave,
+  });
+
+  final bool isEdit;
+  final int stageNumber;
+  final PourStage initialStage;
+  final double initialWaterMl;
+  final UnitMode unitMode;
+  final Color accentColor;
+  final void Function(PourStage stage, double waterMl) onSave;
+
+  @override
+  State<_SessionStageSheet> createState() => _SessionStageSheetState();
+}
+
+class _SessionStageSheetState extends State<_SessionStageSheet> {
+  late TextEditingController _labelCtrl;
+  late TextEditingController _waterCtrl;
+  late int _pourSec;
+  late PourPattern _pattern;
+
+  @override
+  void initState() {
+    super.initState();
+    _labelCtrl = TextEditingController(text: widget.initialStage.label);
+    _waterCtrl = TextEditingController(
+      text: widget.initialWaterMl.round().toString(),
+    );
+    _pourSec = BrewRecipeScaler.pourDurationSec(widget.initialStage);
+    _pattern = widget.initialStage.pattern;
+  }
+
+  @override
+  void dispose() {
+    _labelCtrl.dispose();
+    _waterCtrl.dispose();
+    super.dispose();
+  }
+
+  void _apply() {
+    final label = _labelCtrl.text.trim().isEmpty
+        ? 'Tuangan ${widget.stageNumber}'
+        : _labelCtrl.text.trim();
+    final water =
+        (double.tryParse(_waterCtrl.text.trim()) ?? widget.initialWaterMl)
+            .clamp(5.0, 1200.0);
+    final start = widget.initialStage.startSec;
+    final pourEnd = start + _pourSec;
+    final end = pourEnd > widget.initialStage.endSec
+        ? pourEnd + 10
+        : widget.initialStage.endSec;
+
+    final updated = widget.initialStage.copyWith(
+      label: label,
+      pourEndSec: pourEnd,
+      endSec: end,
+      pattern: _pattern,
+    );
+    widget.onSave(updated, water);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final suffix = widget.unitMode == UnitMode.gram ? 'g' : 'ml';
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: _QuickInputSheetContainer(
+        title: widget.isEdit
+            ? 'Ubah Tahap ${widget.stageNumber} (Sesi Ini)'
+            : 'Tambah Tahap ${widget.stageNumber} (Sesi Ini)',
+        subtitle:
+            'Perubahan hanya berlaku untuk seduhan kali ini, tidak merusak preset asli.',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _labelCtrl,
+              style: PocketTheme.ui(
+                size: 14,
+                weight: 700,
+                color: c.textPrimary,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                labelText: 'Judul Tahap',
+                hintText: 'Contoh: Tuangan 4, Center Pour, Rao Spin',
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _waterCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: PocketTheme.mono(
+                      size: 16,
+                      weight: FontWeight.w800,
+                      color: c.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      labelText: 'Air Tahap Ini',
+                      suffixText: suffix,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: c.surfaceElevated,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _RoundStepButton(
+                        icon: PocketIconType.minus,
+                        size: 30,
+                        iconSize: 13,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _pourSec = (_pourSec - 1).clamp(3, 90));
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Text(
+                          '$_pourSec dtk',
+                          style: PocketTheme.mono(
+                            size: 13,
+                            weight: FontWeight.w800,
+                            color: c.textPrimary,
+                          ),
+                        ),
+                      ),
+                      _RoundStepButton(
+                        icon: PocketIconType.plus,
+                        size: 30,
+                        iconSize: 13,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _pourSec = (_pourSec + 1).clamp(3, 90));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Pola Tuangan',
+              style: PocketTheme.ui(
+                size: 11.5,
+                weight: 700,
+                color: c.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: PourPattern.values.map((p) {
+                final sel = _pattern == p;
+                return PocketPill(
+                  label: p.label,
+                  height: 30,
+                  backgroundColor: sel ? c.brandEspresso : c.surfaceElevated,
+                  foregroundColor: sel ? c.textOnAccent : c.textPrimary,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _pattern = p);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            PocketButton(
+              label: widget.isEdit ? 'Simpan Tahap Sesi Ini' : 'Tambahkan Tahap',
+              pocketIcon: PocketIconType.check,
+              height: 48,
+              backgroundColor: widget.accentColor,
+              foregroundColor: c.textOnAccent,
+              onTap: _apply,
+            ),
+          ],
         ),
       ),
     );

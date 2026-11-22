@@ -44,8 +44,28 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
   final _roasteryCtrl = TextEditingController();
   final _varietyCtrl = TextEditingController();
   final _customProcessCtrl = TextEditingController();
-  final _notesCtrl = TextEditingController();
   final _weightCtrl = TextEditingController(text: '250');
+  final List<TextEditingController> _noteCtrls = [];
+
+  static const List<String> _noteHints = [
+    'Contoh: White Peach',
+    'Contoh: Jasmine',
+    'Contoh: Bergamot',
+    'Contoh: Caramel',
+    'Contoh: Chocolate',
+    'Contoh: Berry',
+  ];
+
+  static const List<String> _quickNoteSuggestions = [
+    'White Peach',
+    'Jasmine',
+    'Citrus',
+    'Berry',
+    'Honey',
+    'Caramel',
+    'Chocolate',
+    'Floral',
+  ];
 
   String _process = 'Washed';
   RoastLevel _roast = RoastLevel.light;
@@ -77,7 +97,11 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
         _nameCtrl.text = existing.name;
         _roasteryCtrl.text = existing.roastery;
         _varietyCtrl.text = existing.variety;
-        _notesCtrl.text = existing.tastingNotes.join(', ');
+        if (existing.tastingNotes.isNotEmpty) {
+          for (final note in existing.tastingNotes) {
+            _noteCtrls.add(TextEditingController(text: note));
+          }
+        }
         if (_processOptions.contains(existing.process)) {
           _process = existing.process;
         } else {
@@ -102,6 +126,9 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
         }
       }
     }
+    while (_noteCtrls.length < 2) {
+      _noteCtrls.add(TextEditingController());
+    }
   }
 
   @override
@@ -110,9 +137,47 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
     _roasteryCtrl.dispose();
     _varietyCtrl.dispose();
     _customProcessCtrl.dispose();
-    _notesCtrl.dispose();
     _weightCtrl.dispose();
+    for (final ctrl in _noteCtrls) {
+      ctrl.dispose();
+    }
     super.dispose();
+  }
+
+  void _addNoteField([String initial = '']) {
+    if (_noteCtrls.length >= 8) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _noteCtrls.add(TextEditingController(text: initial));
+    });
+  }
+
+  void _removeNoteField(int index) {
+    if (_noteCtrls.length <= 1) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      final removed = _noteCtrls.removeAt(index);
+      removed.dispose();
+    });
+  }
+
+  void _applyQuickNote(String note) {
+    HapticFeedback.selectionClick();
+    // Avoid duplicates
+    final exists = _noteCtrls.any(
+      (ctrl) => ctrl.text.trim().toLowerCase() == note.toLowerCase(),
+    );
+    if (exists) return;
+    // Fill first empty slot if available, otherwise add a new slot
+    for (final ctrl in _noteCtrls) {
+      if (ctrl.text.trim().isEmpty) {
+        setState(() => ctrl.text = note);
+        return;
+      }
+    }
+    if (_noteCtrls.length < 8) {
+      setState(() => _noteCtrls.add(TextEditingController(text: note)));
+    }
   }
 
   void _setWeightG(double next) {
@@ -137,9 +202,8 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
         double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.')) ??
             _weightG;
     final finalWeight = parsedW.clamp(5.0, 5000.0);
-    final notesList = _notesCtrl.text
-        .split(',')
-        .map((e) => e.trim())
+    final notesList = _noteCtrls
+        .map((c) => c.text.trim())
         .where((e) => e.isNotEmpty)
         .toList();
     final resolvedProcess = _process == 'Lainnya' &&
@@ -914,22 +978,168 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
                               ? 'Biji masuk tab Cadangan sampai kamu siap membukanya untuk seduh.'
                               : 'Biji langsung muncul di daftar aktif & siap dipilih saat Brew.',
                           style: PocketTheme.ui(
-                            size: 10.5,
+                            size: 10.8,
                             weight: 500,
+                            height: 1.35,
                             color: c.textTertiary,
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 11),
+
+                  // 6. Notes Rasa Kemasan — Individual structured inputs (Notes 1, Notes 2, ...)
+                  PocketCard(
+                    padding: const EdgeInsets.all(14),
+                    radius: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Notes Rasa Kemasan',
+                                style: PocketTheme.ui(
+                                  size: 13.5,
+                                  weight: 800,
+                                  color: c.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (_noteCtrls.length < 8)
+                              PocketPill(
+                                label: '+ Tambah Note',
+                                height: 28,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                backgroundColor: c.tintBerry,
+                                foregroundColor: c.brandBerry,
+                                onTap: () => _addNoteField(),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Isi satu rasa per kolom (Notes 1, Notes 2, dst.) atau ketuk pilihan cepat di bawah.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 10),
-                        TextField(
-                          controller: _notesCtrl,
-                          minLines: 1,
-                          maxLines: 2,
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            labelText: 'Notes Rasa Kemasan (pisahkan koma)',
-                            hintText: 'Contoh: White Peach, Jasmine, Bergamot',
-                            hintMaxLines: 2,
+                        ...List.generate(_noteCtrls.length, (i) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: i < _noteCtrls.length - 1 ? 8 : 0,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 26,
+                                  height: 26,
+                                  decoration: BoxDecoration(
+                                    color: c.tintBerry,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '${i + 1}',
+                                    style: PocketTheme.mono(
+                                      size: 11,
+                                      weight: FontWeight.w800,
+                                      color: c.brandBerry,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 9),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _noteCtrls[i],
+                                    onChanged: (_) => setState(() {}),
+                                    textInputAction: i < _noteCtrls.length - 1
+                                        ? TextInputAction.next
+                                        : TextInputAction.done,
+                                    style: PocketTheme.ui(
+                                      size: 13.5,
+                                      weight: 600,
+                                      color: c.textPrimary,
+                                    ),
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      labelText: 'Notes ${i + 1}',
+                                      hintText: _noteHints[
+                                          i % _noteHints.length],
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (_noteCtrls.length > 1) ...[
+                                  const SizedBox(width: 6),
+                                  PocketTapScale(
+                                    onTap: () => _removeNoteField(i),
+                                    child: Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: c.surfaceElevated,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.close_rounded,
+                                        size: 16,
+                                        color: c.textTertiary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Pilihan Cepat:',
+                          style: PocketTheme.ui(
+                            size: 10.8,
+                            weight: 700,
+                            color: c.textTertiary,
                           ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: _quickNoteSuggestions.map((s) {
+                            final alreadyAdded = _noteCtrls.any(
+                              (ctrl) =>
+                                  ctrl.text.trim().toLowerCase() ==
+                                  s.toLowerCase(),
+                            );
+                            return PocketPill(
+                              label: alreadyAdded ? '$s ✓' : '+ $s',
+                              height: 28,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              backgroundColor: alreadyAdded
+                                  ? c.tintBerry
+                                  : c.surfaceElevated,
+                              foregroundColor: alreadyAdded
+                                  ? c.brandBerry
+                                  : c.textSecondary,
+                              onTap: () => _applyQuickNote(s),
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),

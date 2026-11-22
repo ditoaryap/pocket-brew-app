@@ -7,6 +7,7 @@ import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/brew_recipe_scaler.dart';
@@ -47,6 +48,7 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
   late int _tempC;
   late List<PourStage> _stages;
   late List<double> _stageWaterMl;
+  late List<TextEditingController> _stageLabelCtrls;
   int _expandedIdx = 0;
 
   @override
@@ -91,6 +93,8 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
 
     _stages = List<PourStage>.from(recipe.stages);
     _stageWaterMl = _computeInitialStageWater(_stages, _hotWaterG);
+    _stageLabelCtrls =
+        _stages.map((s) => TextEditingController(text: s.label)).toList();
     _expandedIdx = 0;
   }
 
@@ -116,6 +120,9 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _summaryCtrl.dispose();
+    for (final ctrl in _stageLabelCtrls) {
+      ctrl.dispose();
+    }
     super.dispose();
   }
 
@@ -203,6 +210,11 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
       _summaryCtrl.text = _baseRecipe.summary;
       _stages = List<PourStage>.from(_baseRecipe.stages);
       _stageWaterMl = _computeInitialStageWater(_stages, _hotWaterG);
+      for (final ctrl in _stageLabelCtrls) {
+        ctrl.dispose();
+      }
+      _stageLabelCtrls =
+          _stages.map((s) => TextEditingController(text: s.label)).toList();
       _expandedIdx = 0;
     });
   }
@@ -213,11 +225,12 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
     final last = _stages.isNotEmpty ? _stages.last : null;
     final start = last?.endSec ?? 0;
     final nextOrder = _stages.length + 1;
+    final defaultTitle = 'Tuangan $nextOrder';
     setState(() {
       _stages.add(
         PourStage(
           order: nextOrder,
-          label: 'Tuangan $nextOrder',
+          label: defaultTitle,
           startSec: start,
           pourEndSec: start + 12,
           endSec: start + 35,
@@ -228,17 +241,29 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
         ),
       );
       _stageWaterMl.add(0.0);
+      _stageLabelCtrls.add(TextEditingController(text: defaultTitle));
       _expandedIdx = _stages.length - 1;
     });
   }
 
-  /// Deletes stage [index] WITHOUT altering remaining stages' water!
-  void _removeStage(int index) {
+  /// Deletes stage [index] after confirmation WITHOUT altering remaining stages' water!
+  Future<void> _removeStage(int index) async {
     if (_stages.length <= 1) return;
+    final stageName = _stages[index].label;
+    final ok = await showPocketDeleteDialog(
+      context,
+      title: 'Hapus Tahap Tuangan?',
+      message:
+          'Hapus tahap "${stageName.isEmpty ? 'Tahap ${index + 1}' : stageName}" dari resep ini?',
+      confirmLabel: 'Hapus Tahap',
+    );
+    if (!ok || !mounted) return;
     HapticFeedback.lightImpact();
     setState(() {
       _stages.removeAt(index);
       _stageWaterMl.removeAt(index);
+      final removedCtrl = _stageLabelCtrls.removeAt(index);
+      removedCtrl.dispose();
       _stages = List.generate(
         _stages.length,
         (i) => _stages[i].copyWith(order: i + 1),
@@ -392,9 +417,17 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
       final pct = i == _stages.length - 1
           ? 1.0
           : (runningCum / totalAllocated).clamp(0.0, 1.0);
-      builtStages.add(
-        _stages[i].copyWith(order: i + 1, targetCumulativePct: pct),
-      );
+                                      final resolvedLabel =
+                                          _stageLabelCtrls[i].text.trim().isEmpty
+                                              ? 'Tuangan ${i + 1}'
+                                              : _stageLabelCtrls[i].text.trim();
+                                      builtStages.add(
+                                        _stages[i].copyWith(
+                                          order: i + 1,
+                                          label: resolvedLabel,
+                                          targetCumulativePct: pct,
+                                        ),
+                                      );
     }
 
     final hotLabel = BrewRecipeScaler.formatLiquidCompact(_hotWaterG, unit);
@@ -694,8 +727,6 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                         isIced
                                             ? 'Total Air: ${BrewRecipeScaler.formatLiquidCompact(_totalLiquidG, unit)} (${BrewRecipeScaler.formatLiquidCompact(_hotWaterG, unit)} panas + ${_activeIceG.round()}g es)'
                                             : 'Total Air: ${BrewRecipeScaler.formatLiquidCompact(_totalLiquidG, unit)}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                         style: PocketTheme.mono(
                                           size: 11.5,
                                           weight: FontWeight.w800,
@@ -704,8 +735,6 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                       ),
                                       Text(
                                         '${BrewRecipeScaler.formatDose(_doseG)} × ${_formatRatio(_ratio)} · Ketuk untuk atur manual',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                         style: PocketTheme.ui(
                                           size: 10.2,
                                           weight: 500,
@@ -868,8 +897,6 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                     isIced
                                         ? 'Panduan Alokasi Air Panas'
                                         : 'Panduan Alokasi Air per Tahap',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: PocketTheme.ui(
                                       size: 11.5,
                                       weight: 700,
@@ -879,8 +906,6 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                   const SizedBox(height: 1),
                                   Text(
                                     guideStatusText,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: PocketTheme.mono(
                                       size: 11.2,
                                       weight: FontWeight.w800,
@@ -996,12 +1021,13 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            st.label,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                            st.label.isEmpty
+                                                ? 'Tuangan ${i + 1}'
+                                                : st.label,
                                             style: PocketTheme.ui(
                                               size: 13.5,
                                               weight: 800,
+                                              height: 1.25,
                                               color: c.textPrimary,
                                             ),
                                           ),
@@ -1009,8 +1035,6 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                             deltaWater > 0
                                                 ? '${BrewRecipeScaler.formatShortDuration(st.startSec)} · ${BrewRecipeScaler.formatPourPace(deltaWater, pourSec, unit)} · ${st.pattern.label}'
                                                 : '${BrewRecipeScaler.formatShortDuration(st.startSec)} · Belum diisi air · ${st.pattern.label}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
                                             style: PocketTheme.mono(
                                               size: 10.5,
                                               color: deltaWater > 0
@@ -1070,6 +1094,36 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             const Divider(height: 1),
+                                            const SizedBox(height: 12),
+
+                                            // Rename Stage Title Field (freely rename any stage!)
+                                            TextField(
+                                              controller: _stageLabelCtrls[i],
+                                              onChanged: (val) {
+                                                setState(() {
+                                                  _stages[i] = st.copyWith(
+                                                    label: val,
+                                                  );
+                                                });
+                                              },
+                                              style: PocketTheme.ui(
+                                                size: 13,
+                                                weight: 700,
+                                                color: c.textPrimary,
+                                              ),
+                                              decoration: InputDecoration(
+                                                isDense: true,
+                                                labelText:
+                                                    'Judul Tahap ${i + 1}',
+                                                hintText:
+                                                    'Mis. Bloom, Tuangan 4, Rao Spin...',
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 10,
+                                                ),
+                                              ),
+                                            ),
                                             const SizedBox(height: 12),
 
                                             // Independent Stage Water Control (editable on ALL stages!)

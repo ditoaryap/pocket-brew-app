@@ -188,19 +188,16 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen> {
                                   children: [
                                     Text(
                                       beanName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                       style: PocketTheme.ui(
                                         size: 15,
                                         weight: 800,
+                                        height: 1.25,
                                         color: c.textPrimary,
                                       ),
                                     ),
-                                    const SizedBox(height: 1),
+                                    const SizedBox(height: 2),
                                     Text(
                                       '${pending?.recipeName ?? store.activeRecipe.name} · ${BrewRecipeScaler.formatDose(doseG)}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                       style: PocketTheme.ui(
                                         size: 11.5,
                                         weight: 500,

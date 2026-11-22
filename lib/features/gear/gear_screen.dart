@@ -6,6 +6,7 @@ import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/models/models.dart';
@@ -63,38 +64,14 @@ class _GearScreenState extends ConsumerState<GearScreen> {
     required String name,
     required VoidCallback onConfirm,
   }) async {
-    final c = context.colors;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: c.surfaceCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Hapus Alat Ini?',
-          style: PocketTheme.ui(size: 16.5, weight: 800, color: c.textPrimary),
-        ),
-        content: Text(
-          'Hapus "$name" dari koleksi alatmu? Jika sedang dipakai, setup akan otomatis kembali ke preset bawaan.',
-          style: Theme.of(ctx).textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: c.statusError,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(0, 40),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
+    final ok = await showPocketDeleteDialog(
+      context,
+      title: 'Hapus Alat Ini?',
+      message:
+          'Hapus "$name" dari koleksi alatmu? Jika sedang dipakai, setup akan otomatis beralih ke alat lain yang tersisa.',
+      confirmLabel: 'Hapus Alat',
     );
-    if (ok == true) {
+    if (ok) {
       onConfirm();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -786,21 +763,19 @@ class _ActiveSetupSlot extends StatelessWidget {
                   ),
                   Text(
                     title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: PocketTheme.ui(
                       size: 13.5,
                       weight: 800,
+                      height: 1.25,
                       color: c.textPrimary,
                     ),
                   ),
                   Text(
                     spec,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: PocketTheme.mono(
                       size: 10.5,
                       weight: FontWeight.w500,
+                      height: 1.3,
                       color: c.textSecondary,
                     ),
                   ),
@@ -961,11 +936,10 @@ class _GearCollectionCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: PocketTheme.ui(
                           size: 13.5,
                           weight: 800,
+                          height: 1.25,
                           color:
                               active ? c.brandTerracottaInk : c.textPrimary,
                         ),
@@ -987,11 +961,10 @@ class _GearCollectionCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: PocketTheme.mono(
                     size: 10.8,
                     weight: FontWeight.w600,
+                    height: 1.3,
                     color: c.textSecondary,
                   ),
                 ),
@@ -999,11 +972,10 @@ class _GearCollectionCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     note,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: PocketTheme.ui(
                       size: 11,
                       weight: 500,
+                      height: 1.3,
                       color: c.textTertiary,
                     ),
                   ),

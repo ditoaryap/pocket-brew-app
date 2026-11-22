@@ -6,6 +6,7 @@ import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/brew_recipe_scaler.dart';
@@ -60,6 +61,24 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
     final waterLabel =
         BrewRecipeScaler.formatLiquidCompact(totalWater, prefs.unitMode);
     return '${r.stages.length} tahap · ${_formatRatio(r.ratio)} · $waterLabel · $temp';
+  }
+
+  Future<void> _confirmDeleteRecipe(BrewRecipe recipe) async {
+    final ok = await showPocketDeleteDialog(
+      context,
+      title: 'Hapus Metode Resep?',
+      message: recipe.isOfficial
+          ? 'Hapus resep bawaan "${recipe.name}" dari daftar? Kamu bisa memulihkannya kembali kapan saja lewat tombol Pulihkan di bawah.'
+          : 'Hapus resep custom "${recipe.name}" secara permanen?',
+      confirmLabel: 'Hapus Resep',
+    );
+    if (!ok) return;
+    ref.read(pocketStoreProvider.notifier).deleteRecipe(recipe.id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${recipe.name} dihapus dari daftar resep.')),
+      );
+    }
   }
 
   @override
@@ -331,86 +350,123 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              isSelected
-                                                  ? '${r.name} ✓'
-                                                  : r.name,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: PocketTheme.ui(
-                                                size: 13.5,
-                                                weight: 700,
-                                                color: c.textPrimary,
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                isSelected
+                                                    ? '${r.name} ✓'
+                                                    : r.name,
+                                                style: PocketTheme.ui(
+                                                  size: 13.8,
+                                                  weight: 700,
+                                                  height: 1.25,
+                                                  color: c.textPrimary,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          PocketPill(
-                                            label: r.badge,
-                                            backgroundColor: badgeBg,
-                                            foregroundColor: badgeFg,
-                                            fontSize: 10,
-                                            fontWeight: 600,
-                                            height: 22,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
+                                            const SizedBox(width: 8),
+                                            PocketPill(
+                                              label: r.badge,
+                                              backgroundColor: badgeBg,
+                                              foregroundColor: badgeFg,
+                                              fontSize: 10,
+                                              fontWeight: 600,
+                                              height: 22,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        _recipeSpecLine(r, state.prefs),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: PocketTheme.mono(
-                                          size: 11,
-                                          weight: FontWeight.w600,
-                                          color: specColor,
+                                          ],
                                         ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              r.summary,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: PocketTheme.ui(
-                                                size: 11.8,
-                                                weight: 400,
-                                                height: 1.35,
-                                                color: c.textTertiary,
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          _recipeSpecLine(r, state.prefs),
+                                          style: PocketTheme.mono(
+                                            size: 11,
+                                            weight: FontWeight.w600,
+                                            height: 1.35,
+                                            color: specColor,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                r.summary,
+                                                style: PocketTheme.ui(
+                                                  size: 11.8,
+                                                  weight: 400,
+                                                  height: 1.38,
+                                                  color: c.textTertiary,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          PocketPill(
-                                            label: isCustom ? 'Edit' : 'Ubah',
-                                            pocketIcon: PocketIconType.edit,
-                                            iconSize: 12.5,
-                                            height: 30,
-                                            fontSize: 11,
-                                            fontWeight: 600,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 11,
+                                            const SizedBox(width: 8),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                PocketPill(
+                                                  label: isCustom
+                                                      ? 'Edit'
+                                                      : 'Ubah',
+                                                  pocketIcon:
+                                                      PocketIconType.edit,
+                                                  iconSize: 12.5,
+                                                  height: 30,
+                                                  fontSize: 11,
+                                                  fontWeight: 600,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 10,
+                                                  ),
+                                                  backgroundColor:
+                                                      c.surfaceElevated,
+                                                  foregroundColor:
+                                                      c.textPrimary,
+                                                  onTap: () => context.push(
+                                                    '/brew/stages?recipeId=${r.id}',
+                                                  ),
+                                                ),
+                                                if (state.recipes.length >
+                                                    1) ...[
+                                                  const SizedBox(width: 6),
+                                                  PocketTapScale(
+                                                    onTap: () =>
+                                                        _confirmDeleteRecipe(r),
+                                                    child: Container(
+                                                      width: 30,
+                                                      height: 30,
+                                                      decoration: BoxDecoration(
+                                                        color: c.statusError
+                                                            .withValues(
+                                                          alpha: 0.12,
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                      ),
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: Icon(
+                                                        Icons
+                                                            .delete_outline_rounded,
+                                                        size: 15,
+                                                        color: c.statusError,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
                                             ),
-                                            backgroundColor: c.surfaceElevated,
-                                            foregroundColor: c.textPrimary,
-                                            onTap: () => context.push(
-                                              '/brew/stages?recipeId=${r.id}',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                          ],
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -474,8 +530,6 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
                                         children: [
                                           Text(
                                             '${featuredCustom.name} · Custom',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
                                             style: PocketTheme.ui(
                                               size: 13,
                                               weight: 700,
@@ -488,8 +542,6 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
                                               featuredCustom,
                                               state.prefs,
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
                                             style: PocketTheme.mono(
                                               size: 10.5,
                                               weight: FontWeight.w500,
@@ -520,6 +572,35 @@ class _MethodsScreenState extends ConsumerState<MethodsScreen> {
                                 ),
                               ),
                             ),
+
+                          if (state.hasDeletedOfficialRecipes) ...[
+                            const SizedBox(height: 12),
+                            Center(
+                              child: TextButton(
+                                onPressed: () async {
+                                  await notifier
+                                      .restoreDeletedOfficialRecipes();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Semua resep bawaan berhasil dipulihkan ✓',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Text(
+                                  'Pulihkan Resep Bawaan yang Dihapus',
+                                  style: PocketTheme.ui(
+                                    size: 12,
+                                    weight: 700,
+                                    color: c.textTertiary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
               ),

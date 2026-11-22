@@ -125,6 +125,7 @@ class BrewRecipeScaler {
   }
 
   /// Scales a recipe for any [doseG], [ratio], [mode], [iceRatio], and [icedMethod].
+  /// Optionally accepts [overrideStages] for session-only pour improvisations outside the preset.
   static ScaledBrewPlan scale({
     required BrewRecipe recipe,
     required double doseG,
@@ -133,6 +134,7 @@ class BrewRecipeScaler {
     double iceRatio = 0.40,
     IcedMethod icedMethod = IcedMethod.iceFirst,
     int? overrideTempC,
+    List<PourStage>? overrideStages,
   }) {
     final safeDose =
         ((doseG.clamp(1.0, 120.0) * 10).round() / 10.0).clamp(1.0, 120.0);
@@ -152,9 +154,14 @@ class BrewRecipeScaler {
             ? (recipe.tempC + 2).clamp(80, 99)
             : recipe.tempC);
 
+    final activeStages =
+        (overrideStages != null && overrideStages.isNotEmpty)
+            ? overrideStages
+            : recipe.stages;
+
     final scaledStages = <ScaledStage>[];
     double prevCum = 0;
-    for (final st in recipe.stages) {
+    for (final st in activeStages) {
       final cum = (hotWaterG * st.targetCumulativePct).roundToDouble();
       final delta = (cum - prevCum).clamp(0.0, hotWaterG).toDouble();
       scaledStages.add(

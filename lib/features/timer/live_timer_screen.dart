@@ -90,13 +90,13 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
     if (!_running || _completed || sec == _lastProcessedSec) return;
     final store = ref.read(pocketStoreProvider);
     final plan = store.currentPlan;
-    final recipe = store.activeRecipe;
+    final targetSec = store.activeTargetDrawdownSec;
     final hapticOn = store.prefs.hapticCue;
 
     final snap = BrewTimerEngine.compute(
       elapsedSec: sec,
       stages: plan.stages,
-      targetDrawdownSec: recipe.targetDrawdownSec,
+      targetDrawdownSec: targetSec,
       isRunning: _running,
       isCompleted: _completed,
     );
@@ -123,7 +123,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
 
     if (snap.isFinalDrawdown &&
         !_firedTargetDrawdownCue &&
-        sec >= recipe.targetDrawdownSec) {
+        sec >= targetSec) {
       _firedTargetDrawdownCue = true;
       if (_soundActive) BrewAudioCue.playDrawdownTargetReached();
       if (hapticOn) HapticFeedback.mediumImpact();
@@ -281,7 +281,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
 
   void _proceedToEvaluation() {
     final finalSec = _elapsedSec == 0
-        ? ref.read(pocketStoreProvider).activeRecipe.targetDrawdownSec
+        ? ref.read(pocketStoreProvider).activeTargetDrawdownSec
         : _elapsedSec;
     ref.read(pocketStoreProvider.notifier).finishTimerForEvaluation(finalSec);
     context.pushReplacement('/evaluation');
@@ -377,13 +377,14 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
     final store = ref.watch(pocketStoreProvider);
     final plan = store.currentPlan;
     final recipe = store.activeRecipe;
+    final targetDrawdownSec = store.activeTargetDrawdownSec;
     final unit = store.prefs.unitMode;
     final isIced = plan.mode == BrewMode.iced;
 
     final snap = BrewTimerEngine.compute(
       elapsedSec: _elapsedSec,
       stages: plan.stages,
-      targetDrawdownSec: recipe.targetDrawdownSec,
+      targetDrawdownSec: targetDrawdownSec,
       isRunning: _running,
       isCompleted: _completed,
     );
@@ -462,7 +463,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
     };
 
     final targetFmt =
-        BrewRecipeScaler.formatShortDuration(recipe.targetDrawdownSec);
+        BrewRecipeScaler.formatShortDuration(targetDrawdownSec);
 
     final ringSubtitle = _isPrepping
         ? 'Pegang kettle & siap tuang'
@@ -618,7 +619,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                                 : (snap.phase == TimerPhase.finished
                                     ? 1.0
                                     : (preciseSec /
-                                            recipe.targetDrawdownSec
+                                            targetDrawdownSec
                                                 .clamp(1, 9999))
                                         .clamp(0.0, 1.0));
                             final continuousPhase = _isPrepping
@@ -669,25 +670,27 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                               store: store,
                               plan: plan,
                               recipe: recipe,
-                              unit: unit,
-                              isIced: isIced,
-                            )
-                          : (snap.phase == TimerPhase.finished && isIced)
-                              ? _buildIcedFinishBody(
-                                  context,
-                                  c: c,
-                                  plan: plan,
-                                  recipe: recipe,
-                                  unit: unit,
-                                )
-                              : _buildRunningBody(
-                                  context,
-                                  c: c,
-                                  plan: plan,
-                                  recipe: recipe,
-                                  unit: unit,
-                                  snap: snap,
-                                ),
+                                      targetDrawdownSec: targetDrawdownSec,
+                                      unit: unit,
+                                      isIced: isIced,
+                                    )
+                                  : (snap.phase == TimerPhase.finished &&
+                                          isIced)
+                                      ? _buildIcedFinishBody(
+                                          context,
+                                          c: c,
+                                          plan: plan,
+                                          targetDrawdownSec: targetDrawdownSec,
+                                          unit: unit,
+                                        )
+                                      : _buildRunningBody(
+                                          context,
+                                          c: c,
+                                          plan: plan,
+                                          targetDrawdownSec: targetDrawdownSec,
+                                          unit: unit,
+                                          snap: snap,
+                                        ),
                     ),
                   ],
                 ),
@@ -824,6 +827,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
     required PocketAppState store,
     required ScaledBrewPlan plan,
     required BrewRecipe recipe,
+    required int targetDrawdownSec,
     required UnitMode unit,
     required bool isIced,
   }) {
@@ -831,7 +835,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
     final accent = isIced ? c.brandIce : c.brandTerracottaInk;
     final tint = isIced ? c.tintIce : c.tintTerracotta;
     final targetFmt =
-        BrewRecipeScaler.formatShortDuration(recipe.targetDrawdownSec);
+        BrewRecipeScaler.formatShortDuration(targetDrawdownSec);
 
     return Column(
       key: const ValueKey('ready_setup'),
@@ -844,6 +848,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
@@ -851,19 +856,15 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                       children: [
                         Text(
                           bean?.name ?? 'Biji Kopi Pilihan',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: PocketTheme.ui(
                             size: 14,
                             weight: 800,
                             color: c.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 1),
+                        const SizedBox(height: 2),
                         Text(
                           '${recipe.name} · ${store.activeGrinder.model}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: PocketTheme.ui(
                             size: 11.5,
                             weight: 600,
@@ -1018,8 +1019,6 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                           children: [
                             Text(
                               s.stage.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: PocketTheme.ui(
                                 size: 12.5,
                                 weight: 700,
@@ -1028,8 +1027,6 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                             ),
                             Text(
                               '${BrewRecipeScaler.formatShortDuration(s.stage.startSec)} · ${s.stage.pattern.label}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: PocketTheme.mono(
                                 size: 10,
                                 color: c.textTertiary,
@@ -1109,12 +1106,12 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
     BuildContext context, {
     required PocketColors c,
     required ScaledBrewPlan plan,
-    required BrewRecipe recipe,
+    required int targetDrawdownSec,
     required UnitMode unit,
     required TimerSnapshot snap,
   }) {
     final targetFmt =
-        BrewRecipeScaler.formatShortDuration(recipe.targetDrawdownSec);
+        BrewRecipeScaler.formatShortDuration(targetDrawdownSec);
     final bool isPouring = snap.phase == TimerPhase.pouring;
     final bool isOvertime = snap.isPastTargetDrawdown;
     final bool isDrawdown = snap.isFinalDrawdown;
@@ -1271,8 +1268,6 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                             ),
                             Text(
                               '${BrewRecipeScaler.formatShortDuration(s.stage.startSec)} · ${BrewRecipeScaler.formatPourPace(s.deltaWaterG, BrewRecipeScaler.pourDurationSec(s.stage), unit, compact: true)} · ${s.stage.pattern.label}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: PocketTheme.mono(
                                 size: 10,
                                 color: c.textTertiary,
@@ -1354,7 +1349,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
     BuildContext context, {
     required PocketColors c,
     required ScaledBrewPlan plan,
-    required BrewRecipe recipe,
+    required int targetDrawdownSec,
     required UnitMode unit,
   }) {
     return Column(
@@ -1418,7 +1413,7 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                     ),
                   ),
                   Text(
-                    'Target resep ~${BrewRecipeScaler.formatDuration(recipe.targetDrawdownSec)}',
+                    'Target resep ~${BrewRecipeScaler.formatDuration(targetDrawdownSec)}',
                     style: PocketTheme.mono(
                       size: 10.5,
                       color: c.textTertiary,

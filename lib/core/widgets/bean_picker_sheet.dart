@@ -30,7 +30,10 @@ class _BeanPickerSheet extends ConsumerWidget {
     final c = context.colors;
     final state = ref.watch(pocketStoreProvider);
     final notifier = ref.read(pocketStoreProvider.notifier);
-    final activeBeans = state.beans.where((b) => !b.isArchived).toList();
+    final activeBeans = [
+      ...state.beans.where((b) => !b.isFrozen),
+      ...state.beans.where((b) => b.isFrozen),
+    ];
 
     return SafeArea(
       top: false,
@@ -185,19 +188,16 @@ class _BeanPickerSheet extends ConsumerWidget {
                                 children: [
                                   Text(
                                     bean.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: PocketTheme.ui(
                                       size: 13.5,
                                       weight: 700,
+                                      height: 1.25,
                                       color: c.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${bean.remainingG.round()}g stok · ${info.badgeText} · ${bean.process}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                    '${bean.remainingG.round()}g stok · ${info.badgeText} · ${bean.process}${bean.isFrozen ? ' · Cadangan' : ''}',
                                     style: PocketTheme.mono(
                                       size: 10.5,
                                       weight: FontWeight.w500,

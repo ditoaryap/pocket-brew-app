@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../app/pocket_version.dart';
 import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
+import '../../core/audio/brew_audio_cue.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/models/enums.dart';
@@ -193,8 +195,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: prefs.soundCue,
                           onChanged: (v) {
                             notifier.updatePrefs(prefs.copyWith(soundCue: v));
+                            if (v) BrewAudioCue.playTestTone();
                             _markDirty();
                           },
+                          extraAction: PocketPill(
+                            label: 'Tes Suara',
+                            height: 28,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            backgroundColor: c.tintTerracotta,
+                            foregroundColor: c.brandTerracottaInk,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              BrewAudioCue.playTestTone();
+                            },
+                          ),
                         ),
                         const Divider(),
                         _ToggleRow(
@@ -329,17 +345,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Pocket Brew',
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
+                            const Expanded(
+                              child: Text(
+                                'Pocket Brew',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
-                            PocketPill(
-                              label: PocketVersion.fullLabel,
-                              backgroundColor: c.surfaceElevated,
-                              foregroundColor: c.textPrimary,
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: PocketPill(
+                                label: PocketVersion.fullLabel,
+                                backgroundColor: c.surfaceElevated,
+                                foregroundColor: c.textPrimary,
+                              ),
                             ),
                           ],
                         ),
@@ -349,6 +370,70 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           '${state.beans.length} biji · ${state.logs.length} seduhan · '
                           '${state.recipes.where((r) => !r.isOfficial).length} resep custom',
                           style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Hapus Semua Data',
+                                    style: PocketTheme.ui(
+                                      size: 13.5,
+                                      weight: 800,
+                                      color: c.statusError,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Bersihkan seluruh stok biji, riwayat seduhan, resep & alat custom agar mulai bersih.',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            PocketPill(
+                              label: 'Hapus Data',
+                              height: 34,
+                              fontSize: 11.5,
+                              fontWeight: 700,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              backgroundColor:
+                                  c.statusError.withValues(alpha: 0.14),
+                              foregroundColor: c.statusError,
+                              borderColor:
+                                  c.statusError.withValues(alpha: 0.35),
+                              onTap: () async {
+                                final ok = await showPocketDeleteDialog(
+                                  context,
+                                  title: 'Hapus Semua Data Lokal?',
+                                  message:
+                                      'Seluruh stok biji kopi, catatan riwayat seduhan, resep custom, dan alat tambahan akan dihapus permanen dari HP ini. Preset bawaan akan kembali seperti awal.',
+                                  confirmLabel: 'Ya, Hapus Semua',
+                                );
+                                if (!ok) return;
+                                await notifier.clearAllLocalData();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Semua data lokal berhasil dibersihkan ✓',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -583,38 +668,49 @@ class _ToggleRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    this.extraAction,
   });
 
   final String title;
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final Widget? extraAction;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                 ),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
+              ),
+              Switch(value: value, onChanged: onChanged),
+            ],
           ),
-          Switch(value: value, onChanged: onChanged),
+          if (extraAction != null) ...[
+            const SizedBox(height: 6),
+            extraAction!,
+          ],
         ],
       ),
     );

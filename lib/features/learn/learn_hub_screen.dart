@@ -145,22 +145,20 @@ class LearnHubScreen extends ConsumerWidget {
                                       children: [
                                         Text(
                                           g.title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
                                           style: PocketTheme.ui(
                                             size: 14,
                                             weight: 800,
+                                            height: 1.25,
                                             color: titleColor,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: 3),
                                         Text(
                                           '${g.subtitle} · ${g.readMinutes} mnt',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
                                           style: PocketTheme.ui(
-                                            size: 11,
+                                            size: 11.2,
                                             weight: 500,
+                                            height: 1.35,
                                             color: c.textSecondary,
                                           ),
                                         ),

@@ -6,6 +6,7 @@ import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/brew_recipe_scaler.dart';
@@ -707,7 +708,7 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Top row: Bean Name + Mode badge + ★ Rating
+                          // Top row: Bean Name + Mode badge + ★ Rating + Delete
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -717,16 +718,19 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                                   children: [
                                     Text(
                                       log.beanName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                       style: PocketTheme.ui(
                                         size: 14.5,
                                         weight: 800,
+                                        height: 1.25,
                                         color: c.textPrimary,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Row(
+                                    const SizedBox(height: 3),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.symmetric(
@@ -751,17 +755,12 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Flexible(
-                                          child: Text(
-                                            '${_formatDateShort(log.brewedAt)} · ${log.recipeName.split('·').last.trim()}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: PocketTheme.ui(
-                                              size: 11,
-                                              weight: 500,
-                                              color: c.textTertiary,
-                                            ),
+                                        Text(
+                                          '${_formatDateShort(log.brewedAt)} · ${log.recipeName.split('·').last.trim()}',
+                                          style: PocketTheme.ui(
+                                            size: 11,
+                                            weight: 500,
+                                            color: c.textTertiary,
                                           ),
                                         ),
                                       ],
@@ -770,34 +769,80 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 9,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: c.tintHoney,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    PocketIcon(
-                                      PocketIconType.starFilled,
-                                      size: 12,
-                                      color: c.brandHoney,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 5,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      log.rating.toStringAsFixed(1),
-                                      style: PocketTheme.mono(
-                                        size: 12.5,
-                                        weight: FontWeight.w800,
-                                        color: c.brandHoney,
+                                    decoration: BoxDecoration(
+                                      color: c.tintHoney,
+                                      borderRadius: BorderRadius.circular(11),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        PocketIcon(
+                                          PocketIconType.starFilled,
+                                          size: 12,
+                                          color: c.brandHoney,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          log.rating.toStringAsFixed(1),
+                                          style: PocketTheme.mono(
+                                            size: 12.5,
+                                            weight: FontWeight.w800,
+                                            color: c.brandHoney,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  PocketTapScale(
+                                    onTap: () async {
+                                      final ok = await showPocketDeleteDialog(
+                                        context,
+                                        title: 'Hapus Riwayat Seduhan?',
+                                        message:
+                                            'Catatan seduhan "${log.beanName}" ini akan dihapus permanen.',
+                                        confirmLabel: 'Hapus',
+                                      );
+                                      if (!ok) return;
+                                      ref
+                                          .read(pocketStoreProvider.notifier)
+                                          .deleteLog(log.id);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Catatan seduhan dihapus.',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        color: c.statusError
+                                            .withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.delete_outline_rounded,
+                                        size: 15,
+                                        color: c.statusError,
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -871,11 +916,10 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                             const SizedBox(height: 6),
                             Text(
                               '"${log.notes}"',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: PocketTheme.ui(
-                                size: 11.5,
+                                size: 11.8,
                                 weight: 500,
+                                height: 1.38,
                                 color: c.textSecondary,
                               ).copyWith(fontStyle: FontStyle.italic),
                             ),

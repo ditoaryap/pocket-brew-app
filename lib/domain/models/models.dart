@@ -399,7 +399,6 @@ class CoffeeBean {
     this.customRestMaxD,
     this.isFrozen = false,
     this.frozenDays = 0,
-    this.isArchived = false,
     this.preferredHotClick,
     this.preferredIcedClick,
   });
@@ -420,7 +419,6 @@ class CoffeeBean {
   final int? customRestMaxD;
   final bool isFrozen;
   final int frozenDays;
-  final bool isArchived;
   final int? preferredHotClick;
   final int? preferredIcedClick;
 
@@ -444,7 +442,6 @@ class CoffeeBean {
     bool clearCustomRest = false,
     bool? isFrozen,
     int? frozenDays,
-    bool? isArchived,
     int? preferredHotClick,
     int? preferredIcedClick,
   }) =>
@@ -467,7 +464,6 @@ class CoffeeBean {
             clearCustomRest ? null : (customRestMaxD ?? this.customRestMaxD),
         isFrozen: isFrozen ?? this.isFrozen,
         frozenDays: frozenDays ?? this.frozenDays,
-        isArchived: isArchived ?? this.isArchived,
         preferredHotClick: preferredHotClick ?? this.preferredHotClick,
         preferredIcedClick: preferredIcedClick ?? this.preferredIcedClick,
       );
@@ -495,7 +491,6 @@ class CoffeeBean {
       customRestMaxD: (j['custom_rest_max_d'] as num?)?.toInt(),
       isFrozen: j['is_frozen'] as bool? ?? false,
       frozenDays: (j['frozen_days'] as num?)?.toInt() ?? 0,
-      isArchived: j['is_archived'] as bool? ?? false,
       preferredHotClick: (j['preferred_hot_click'] as num?)?.toInt(),
       preferredIcedClick: (j['preferred_iced_click'] as num?)?.toInt(),
     );
@@ -518,7 +513,6 @@ class CoffeeBean {
         'custom_rest_max_d': customRestMaxD,
         'is_frozen': isFrozen,
         'frozen_days': frozenDays,
-        'is_archived': isArchived,
         'preferred_hot_click': preferredHotClick,
         'preferred_iced_click': preferredIcedClick,
       };

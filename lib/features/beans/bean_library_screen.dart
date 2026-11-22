@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
+import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/bean_resting_calculator.dart';
 
-/// Screen 13 · Bean Library & Stock (Active / Freezer / Arsip + Last-Cup Auto-scale).
+/// Screen 13 · Biji Kopi & Stok (Aktif / Cadangan + Last-Cup Auto-scale + Delete with confirmation).
 class BeanLibraryScreen extends ConsumerStatefulWidget {
   const BeanLibraryScreen({super.key});
 
@@ -17,8 +20,28 @@ class BeanLibraryScreen extends ConsumerStatefulWidget {
 
 class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
   static const int _pageSize = 12;
-  int _tab = 0; // 0 = Aktif, 1 = Cadangan, 2 = Arsip
+  int _tab = 0; // 0 = Aktif, 1 = Cadangan
   int _visibleCount = _pageSize;
+
+  Future<void> _confirmDeleteBean({
+    required String beanId,
+    required String beanName,
+  }) async {
+    final ok = await showPocketDeleteDialog(
+      context,
+      title: 'Hapus Biji Kopi?',
+      message:
+          'Biji "$beanName" akan dihapus permanen dari daftar stokmu. Riwayat seduhan yang sudah tercatat tetap aman.',
+      confirmLabel: 'Hapus Biji',
+    );
+    if (!ok) return;
+    ref.read(pocketStoreProvider.notifier).deleteBean(beanId);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$beanName dihapus dari stok biji.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,17 +49,10 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
     final state = ref.watch(pocketStoreProvider);
     final notifier = ref.read(pocketStoreProvider.notifier);
 
-    final activeList =
-        state.beans.where((b) => !b.isArchived && !b.isFrozen).toList();
-    final reserveList =
-        state.beans.where((b) => !b.isArchived && b.isFrozen).toList();
-    final archivedList = state.beans.where((b) => b.isArchived).toList();
+    final activeList = state.beans.where((b) => !b.isFrozen).toList();
+    final reserveList = state.beans.where((b) => b.isFrozen).toList();
 
-    final shown = switch (_tab) {
-      1 => reserveList,
-      2 => archivedList,
-      _ => activeList,
-    };
+    final shown = _tab == 1 ? reserveList : activeList;
     final visibleShown = shown.take(_visibleCount).toList();
     final hasMore = shown.length > visibleShown.length;
 
@@ -48,10 +64,13 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Biji Kopi',
-                  style: Theme.of(context).textTheme.titleLarge,
+                Expanded(
+                  child: Text(
+                    'Biji Kopi',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 PocketPill(
                   label: '+ Tambah',
                   backgroundColor: c.brandEspresso,
@@ -66,36 +85,72 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 3 Tabs: Aktif / Cadangan / Arsip
-            Row(
-              children: [
-                _BeanTab(
-                  label: 'Aktif (${activeList.length})',
-                  active: _tab == 0,
-                  onTap: () => setState(() {
-                    _tab = 0;
-                    _visibleCount = _pageSize;
-                  }),
-                ),
-                const SizedBox(width: 7),
-                _BeanTab(
-                  label: 'Cadangan (${reserveList.length})',
-                  active: _tab == 1,
-                  onTap: () => setState(() {
-                    _tab = 1;
-                    _visibleCount = _pageSize;
-                  }),
-                ),
-                const SizedBox(width: 7),
-                _BeanTab(
-                  label: 'Arsip (${archivedList.length})',
-                  active: _tab == 2,
-                  onTap: () => setState(() {
-                    _tab = 2;
-                    _visibleCount = _pageSize;
-                  }),
-                ),
-              ],
+            // Smooth 2-Tab Sliding Capsule: Aktif | Cadangan (No Archive!)
+            Container(
+              height: 42,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: c.surfaceElevated,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: c.borderSubtle),
+              ),
+              child: Stack(
+                children: [
+                  AnimatedAlign(
+                    duration: const Duration(milliseconds: 220),
+                    curve: PocketCurves.gentleSpring,
+                    alignment: _tab == 0
+                        ? Alignment.centerLeft
+                        : Alignment.centerRight,
+                    child: FractionallySizedBox(
+                      widthFactor: 0.5,
+                      heightFactor: 1.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: c.surfaceCard,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: c.isDark
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: const Color(0xFF1F1915)
+                                        .withValues(alpha: 0.06),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _BeanTab(
+                        label: 'Aktif (${activeList.length})',
+                        active: _tab == 0,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _tab = 0;
+                            _visibleCount = _pageSize;
+                          });
+                        },
+                      ),
+                      _BeanTab(
+                        label: 'Cadangan (${reserveList.length})',
+                        active: _tab == 1,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _tab = 1;
+                            _visibleCount = _pageSize;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 14),
 
@@ -104,19 +159,28 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    Icon(Icons.grain_rounded,
-                        size: 38, color: c.brandTerracotta),
+                    Icon(
+                      Icons.grain_rounded,
+                      size: 38,
+                      color: c.brandTerracotta,
+                    ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Belum ada biji kopi di sini',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                    Text(
+                      _tab == 1
+                          ? 'Belum ada stok cadangan'
+                          : 'Belum ada biji kopi di sini',
+                      textAlign: TextAlign.center,
+                      style: PocketTheme.ui(
+                        size: 16,
+                        weight: 800,
+                        color: c.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Tambahkan kantong biji baru atau sisa stok agar masa resting & sisa gram terpantau otomatis.',
+                      _tab == 1
+                          ? 'Biji yang kamu tandai sebagai Stok Cadangan akan tersimpan rapi di sini.'
+                          : 'Tambahkan kantong biji baru atau sisa stok agar masa paling enak & sisa gram terpantau otomatis.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
@@ -129,7 +193,7 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                       ),
                       onPressed: () => context.push('/beans/add'),
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('Tambah Biji Pertama'),
+                      label: const Text('Tambah Biji Baru'),
                     ),
                   ],
                 ),
@@ -167,17 +231,58 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Text(
-                                bean.name,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    bean.name,
+                                    style: PocketTheme.ui(
+                                      size: 15,
+                                      weight: 800,
+                                      height: 1.25,
+                                      color: c.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${bean.roastery} · ${bean.process} · ${bean.roastLevel.shortLabel}',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            PocketTapScale(
+                              onTap: () => _confirmDeleteBean(
+                                beanId: bean.id,
+                                beanName: bean.name,
+                              ),
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: c.statusError.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 16,
+                                  color: c.statusError,
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
                             PocketPill(
                               label: info.isLastCupAlert
                                   ? 'Sisa ${bean.remainingG.round()}g · Terakhir!'
@@ -186,12 +291,15 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                               foregroundColor: pillFg,
                               fontSize: 10.5,
                             ),
+                            if (bean.remainingG <= 0.1)
+                              PocketPill(
+                                label: 'Stok Habis',
+                                backgroundColor:
+                                    c.statusError.withValues(alpha: 0.14),
+                                foregroundColor: c.statusError,
+                                fontSize: 10.5,
+                              ),
                           ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${bean.roastery} · ${bean.process} · ${bean.roastLevel.shortLabel}',
-                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 10),
                         Row(
@@ -205,11 +313,15 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                                 color: c.textPrimary,
                               ),
                             ),
-                            Text(
-                              '~${info.cupsRemaining} cup · ${bean.preferredHotClick != null ? '${bean.preferredHotClick} klik' : 'Belum dial-in'}',
-                              style: PocketTheme.mono(
-                                size: 11,
-                                color: c.textTertiary,
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                '~${info.cupsRemaining} cup · ${bean.preferredHotClick != null ? '${bean.preferredHotClick} klik' : 'Belum dial-in'}',
+                                textAlign: TextAlign.right,
+                                style: PocketTheme.mono(
+                                  size: 11,
+                                  color: c.textTertiary,
+                                ),
                               ),
                             ),
                           ],
@@ -236,14 +348,20 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                                     backgroundColor: c.brandEspresso,
                                     foregroundColor: c.textOnAccent,
                                     minimumSize: const Size(0, 40),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
                                   ),
                                   onPressed: () {
                                     notifier.startLastCupBrew(bean);
                                     context.go('/brew');
                                   },
-                                  child: Text(
-                                    'Auto-scale ${bean.remainingG.round()}g →',
-                                    style: const TextStyle(fontSize: 12.5),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Auto-scale ${bean.remainingG.round()}g →',
+                                      style: const TextStyle(fontSize: 12.5),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -298,7 +416,7 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                                 child: FilledButton(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: c.brandTerracotta,
-                                    foregroundColor: const Color(0xFFFFFDF9),
+                                    foregroundColor: c.textOnAccent,
                                     minimumSize: const Size(0, 38),
                                   ),
                                   onPressed: () {
@@ -371,23 +489,18 @@ class _BeanTab extends StatelessWidget {
     final c = context.colors;
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          decoration: BoxDecoration(
-            color: active ? c.brandEspresso : c.surfaceCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: active ? Colors.transparent : c.borderSubtle,
-            ),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: active ? c.textOnAccent : c.textSecondary,
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: PocketTheme.ui(
+                size: 12.5,
+                weight: active ? 700 : 600,
+                color: active ? c.textPrimary : c.textSecondary,
+              ),
             ),
           ),
         ),

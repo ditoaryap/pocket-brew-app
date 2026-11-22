@@ -18,6 +18,35 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/id-ID/1.0.0/) 
 
 ---
 
+## [1.0.2+3] - 2026-11-22
+### Ditambahkan (Added)
+- **Sintesis Audio Native Android (`AudioTrack` PCM Chime)**:
+  - Menambahkan mesin sintesis suara *bell chime* 100% offline langsung di `MainActivity.kt` (`AudioAttributes.USAGE_MEDIA`) agar bunyi hitung mundur `3–2–1`, mulai tuang, tunggu/swirl, dan selesai seduh terdengar jernih di HP Android (tidak lagi bergantung pada `SystemSound` bawaan yang bisu di Android), dilengkapi tombol **Tes Suara** di halaman **Pengaturan**.
+- **Hapus Semua Data Lokal di Pengaturan**:
+  - Menambahkan tombol **Hapus Data** (dengan modal konfirmasi keamanan) untuk membersihkan seluruh biji kopi, riwayat seduhan, resep & alat custom secara menyeluruh.
+- **Edit / Tambah / Hapus Tahap Tuangan Langsung di Halaman Brew (Sesi Ini)**:
+  - Barista kini bisa menambah tahap baru (`+ Tambah Tahap (Sesi Ini)`), mengubah judul/air/durasi/pola per tahap, atau menghapus tahap langsung dari halaman **Brew** khusus untuk sesi seduh tersebut tanpa merusak preset resep aslinya, lengkap dengan tombol **Reset preset**.
+- **Rename Judul Tahap Tuangan di Editor Metode Resep**:
+  - Menambahkan input **Judul Tahap** di setiap kartu tahap pada layar **Edit Tahapan** sehingga `Tuangan 4`, `Tuangan 5`, dst. bisa diganti namanya secara bebas.
+- **Fitur Hapus Menyeluruh + Modal Konfirmasi Universal (`showPocketDeleteDialog`)**:
+  - Semua entitas (Biji Kopi, Metode Resep bawaan & custom, Alat Seduh bawaan & custom, Riwayat Seduhan, Tahap Tuangan, dan Reset Data) kini bisa dihapus dan selalu dilindungi dialog konfirmasi **Batal / Hapus**, lengkap dengan tombol **Pulihkan Resep/Alat Bawaan**.
+
+### Diubah / Disempurnakan (Changed)
+- **Redesign Welcome / Entrance Screen (`_PocketEntranceCurtain`)**:
+  - Desain ulang layar pembuka agar lebih tenang, elegan, dan adaptif mengikuti tema **Soft Oat (Terang)** & **Espresso Dusk (Gelap)** dengan durasi animasi lebih nyaman (`2.35 dtk`), cincin riak tuangan, busur *crema*, dan tipografi bertahap.
+- **Redesign Header Beranda**:
+  - Header Beranda dibuat lebih ringkas, proporsional, dan rapi dalam 1 kartu kompak sehingga area **Launchpad Seduh** langsung terlihat nyaman tanpa terlalu tinggi.
+- **Input Notes Rasa Kemasan Per-Item (`Notes 1`, `Notes 2`, dst.)**:
+  - Mengganti input teks pisah koma di **Tambah / Edit Biji Kopi** menjadi kolom terpisah (`Notes 1`, `Notes 2`, `+ Tambah Note`) ditambah chip pilihan cepat sekali ketuk.
+- **Redesign Detail Biji & Koreksi Sisa Stok Fleksibel**:
+  - Tampilan **Detail Biji** disempurnakan dengan strip 3-KPI (*Sisa Stok*, *Estimasi*, *Klik Andalan*) dan input **Koreksi Sisa Stok Aktual** yang bebas diketik langsung (mendukung desimal seperti `18.5g`) plus tombol `±1g`, `±5g`, `±10g`, dan `0g (Habis)`.
+- **Penghapusan Fitur Arsip Biji Kopi (Backward-Compatible)**:
+  - Menghapus tab dan tombol **Arsip** secara bersih dari UI, store, dan model (tetap aman membaca database/cadangan versi lama tanpa kehilangan data saat update APK).
+- **Audit Keterbacaan Teks Panjang & Responsivitas Light/Dark Mode**:
+  - Menghilangkan pemotongan teks `...` (`TextOverflow.ellipsis`) yang menyulitkan baca pada nama biji, spesifikasi resep, catatan seduhan, nama alat, dan tahapan tuangan di seluruh layar.
+
+---
+
 ## [1.0.1+2] - 2026-11-22
 ### Ditambahkan (Added)
 - **Logo & Adaptive Icon Resmi Pocket Brew**:

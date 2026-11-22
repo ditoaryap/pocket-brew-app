@@ -22,6 +22,7 @@ class ActiveBrewDraft {
     required this.iceRatio,
     required this.clickSetting,
     required this.tempC,
+    this.sessionStages,
   });
 
   final String recipeId;
@@ -33,6 +34,7 @@ class ActiveBrewDraft {
   final double iceRatio;
   final int clickSetting;
   final int tempC;
+  final List<PourStage>? sessionStages;
 
   ActiveBrewDraft copyWith({
     String? recipeId,
@@ -45,6 +47,8 @@ class ActiveBrewDraft {
     double? iceRatio,
     int? clickSetting,
     int? tempC,
+    List<PourStage>? sessionStages,
+    bool clearSessionStages = false,
   }) =>
       ActiveBrewDraft(
         recipeId: recipeId ?? this.recipeId,
@@ -56,6 +60,9 @@ class ActiveBrewDraft {
         iceRatio: iceRatio ?? this.iceRatio,
         clickSetting: clickSetting ?? this.clickSetting,
         tempC: tempC ?? this.tempC,
+        sessionStages: clearSessionStages
+            ? null
+            : (sessionStages ?? this.sessionStages),
       );
 }
 
@@ -140,6 +147,7 @@ class PocketAppState {
     this.deletedGrinderIds = const <String>{},
     this.deletedDripperIds = const <String>{},
     this.deletedFilterIds = const <String>{},
+    this.deletedRecipeIds = const <String>{},
   });
 
   final bool isLoaded;
@@ -158,11 +166,21 @@ class PocketAppState {
   final Set<String> deletedGrinderIds;
   final Set<String> deletedDripperIds;
   final Set<String> deletedFilterIds;
+  final Set<String> deletedRecipeIds;
 
   bool get hasDeletedOfficialGear =>
       deletedGrinderIds.isNotEmpty ||
       deletedDripperIds.isNotEmpty ||
       deletedFilterIds.isNotEmpty;
+
+  bool get hasDeletedOfficialRecipes => deletedRecipeIds.isNotEmpty;
+
+  bool get hasSessionStageOverrides => draft.sessionStages != null;
+
+  int get activeTargetDrawdownSec =>
+      (draft.sessionStages != null && draft.sessionStages!.isNotEmpty)
+          ? draft.sessionStages!.last.endSec
+          : activeRecipe.targetDrawdownSec;
 
   GearProfile get activeProfile => profiles.firstWhere(
         (p) => p.id == activeProfileId,
@@ -205,6 +223,7 @@ class PocketAppState {
         iceRatio: draft.iceRatio,
         icedMethod: draft.icedMethod,
         overrideTempC: draft.tempC,
+        overrideStages: draft.sessionStages,
       );
 
   PocketAppState copyWith({
@@ -225,6 +244,7 @@ class PocketAppState {
     Set<String>? deletedGrinderIds,
     Set<String>? deletedDripperIds,
     Set<String>? deletedFilterIds,
+    Set<String>? deletedRecipeIds,
   }) =>
       PocketAppState(
         isLoaded: isLoaded ?? this.isLoaded,
@@ -244,6 +264,7 @@ class PocketAppState {
         deletedGrinderIds: deletedGrinderIds ?? this.deletedGrinderIds,
         deletedDripperIds: deletedDripperIds ?? this.deletedDripperIds,
         deletedFilterIds: deletedFilterIds ?? this.deletedFilterIds,
+        deletedRecipeIds: deletedRecipeIds ?? this.deletedRecipeIds,
       );
 }
 
@@ -415,6 +436,10 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
           (saved['deleted_filter_ids'] as List<dynamic>? ?? [])
               .map((e) => e.toString())
               .toSet();
+      final deletedRecipeIds =
+          (saved['deleted_recipe_ids'] as List<dynamic>? ?? [])
+              .map((e) => e.toString())
+              .toSet();
 
       final customGrinders =
           _parseListSafe(saved['custom_grinders'], GrinderSpec.fromJson);
@@ -429,8 +454,14 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
       final logs = _parseListSafe(saved['logs'], BrewLog.fromJson);
       final activeProfileId =
           saved['active_profile_id'] as String? ?? 'home-bar';
-      final allRecipes = [...catalog.recipes, ...customRecipes];
-      final activeBean = beans.where((b) => !b.isArchived).firstOrNull;
+      final mergedRecipes = [
+        ...catalog.recipes.where((r) => !deletedRecipeIds.contains(r.id)),
+        ...customRecipes,
+      ];
+      final allRecipes =
+          mergedRecipes.isEmpty ? [catalog.recipes.first] : mergedRecipes;
+      final activeBean = beans.where((b) => !b.isFrozen).firstOrNull ??
+          beans.firstOrNull;
 
       final mergedGrinders = [
         ...catalog.grinders.where((g) => !deletedGrinderIds.contains(g.id)),
@@ -463,16 +494,17 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
         deletedGrinderIds: deletedGrinderIds,
         deletedDripperIds: deletedDripperIds,
         deletedFilterIds: deletedFilterIds,
+        deletedRecipeIds: deletedRecipeIds,
         draft: ActiveBrewDraft(
           recipeId: allRecipes.first.id,
           beanId: activeBean?.id,
-          mode: BrewMode.hot,
+          mode: allRecipes.first.mode,
           icedMethod: IcedMethod.iceFirst,
-          doseG: 15.0,
-          ratio: 16.67,
+          doseG: allRecipes.first.doseG,
+          ratio: allRecipes.first.ratio,
           iceRatio: 0.40,
           clickSetting: activeBean?.preferredHotClick ?? 21,
-          tempC: 94,
+          tempC: allRecipes.first.tempC,
         ),
       );
       return;
@@ -895,6 +927,7 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
       'deleted_grinder_ids': state.deletedGrinderIds.toList(),
       'deleted_dripper_ids': state.deletedDripperIds.toList(),
       'deleted_filter_ids': state.deletedFilterIds.toList(),
+      'deleted_recipe_ids': state.deletedRecipeIds.toList(),
       'custom_recipes':
           state.recipes.where((r) => !r.isOfficial).map((r) => r.toJson()).toList(),
       'beans': state.beans.map((b) => b.toJson()).toList(),
@@ -919,6 +952,55 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Clears ALL user data (beans, brew logs, custom gear, custom recipes, deleted flags)
+  /// and writes a clean empty local state so reopening the app stays completely fresh.
+  Future<void> clearAllLocalData() async {
+    final catalog = await CatalogLoader.loadBundled();
+    final storage = ref.read(pocketStorageProvider);
+    final currentTheme = state.prefs.themePref;
+    final currentUnit = state.prefs.unitMode;
+    final currentTemp = state.prefs.tempUnit;
+    await storage.clear();
+
+    final freshProfiles = _defaultProfiles();
+    final firstRecipe = catalog.recipes.first;
+    state = PocketAppState(
+      isLoaded: true,
+      prefs: UserPrefs(
+        onboarded: true,
+        themePref: currentTheme,
+        unitMode: currentUnit,
+        tempUnit: currentTemp,
+      ),
+      grinders: catalog.grinders,
+      drippers: catalog.drippers,
+      filters: catalog.filters,
+      profiles: freshProfiles,
+      activeProfileId: freshProfiles.first.id,
+      recipes: catalog.recipes,
+      beans: const [],
+      logs: const [],
+      guides: catalog.guides,
+      deletedGrinderIds: const <String>{},
+      deletedDripperIds: const <String>{},
+      deletedFilterIds: const <String>{},
+      deletedRecipeIds: const <String>{},
+      draft: ActiveBrewDraft(
+        recipeId: firstRecipe.id,
+        beanId: null,
+        mode: firstRecipe.mode,
+        icedMethod: IcedMethod.iceFirst,
+        doseG: firstRecipe.doseG,
+        ratio: firstRecipe.ratio,
+        iceRatio: 0.40,
+        clickSetting: 21,
+        tempC: firstRecipe.tempC,
+      ),
+      pendingEval: null,
+    );
+    await _persist();
   }
 
   // ---- PREFERENCES ----
@@ -1223,7 +1305,27 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
         icedMethod: recipe.icedMethod,
         tempC: recipe.tempC,
         clickSetting: click,
+        clearSessionStages: true,
       ),
+    );
+  }
+
+  /// Session-only pour stage override (outside the saved preset recipe).
+  void setSessionStages(List<PourStage> stages) {
+    if (stages.isEmpty) return;
+    final normalized = List.generate(
+      stages.length,
+      (i) => stages[i].copyWith(order: i + 1),
+    );
+    state = state.copyWith(
+      draft: state.draft.copyWith(sessionStages: normalized),
+    );
+  }
+
+  /// Resets session-only pour stage overrides back to the active preset recipe stages.
+  void resetSessionStages() {
+    state = state.copyWith(
+      draft: state.draft.copyWith(clearSessionStages: true),
     );
   }
 
@@ -1303,16 +1405,35 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
     _persist();
   }
 
-  void deleteCustomRecipe(String recipeId) {
+  void deleteRecipe(String recipeId) {
     final target = state.recipes.where((r) => r.id == recipeId).firstOrNull;
-    if (target == null || target.isOfficial) return;
+    if (target == null) return;
     final remaining = state.recipes.where((r) => r.id != recipeId).toList();
+    if (remaining.isEmpty) return;
     final needsFallback = state.draft.recipeId == recipeId;
-    state = state.copyWith(recipes: remaining);
-    if (needsFallback && remaining.isNotEmpty) {
+    final nextDeleted = target.isOfficial
+        ? {...state.deletedRecipeIds, recipeId}
+        : state.deletedRecipeIds;
+    state = state.copyWith(
+      recipes: remaining,
+      deletedRecipeIds: nextDeleted,
+    );
+    if (needsFallback) {
       selectRecipe(remaining.first.id);
     }
     _persist();
+  }
+
+  void deleteCustomRecipe(String recipeId) => deleteRecipe(recipeId);
+
+  Future<void> restoreDeletedOfficialRecipes() async {
+    final catalog = await CatalogLoader.loadBundled();
+    final customRecipes = state.recipes.where((r) => !r.isOfficial).toList();
+    state = state.copyWith(
+      recipes: [...catalog.recipes, ...customRecipes],
+      deletedRecipeIds: const <String>{},
+    );
+    await _persist();
   }
 
   void startLastCupBrew(CoffeeBean bean) {
@@ -1372,7 +1493,7 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
         totalLiquidG: plan.totalLiquidG,
         hotWaterG: plan.hotWaterG,
         iceG: plan.iceG,
-        targetDrawdownSec: state.activeRecipe.targetDrawdownSec,
+        targetDrawdownSec: state.activeTargetDrawdownSec,
         actualDrawdownSec: actualDrawdownSec,
         stageSnapshots: snaps,
       ),
@@ -1503,11 +1624,14 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
   }
 
   void correctBeanStock(String beanId, double actualRemainingG) {
+    final safeG = actualRemainingG.clamp(0.0, 5000.0);
     state = state.copyWith(
       beans: state.beans.map((b) {
         if (b.id == beanId) {
+          final nextBag = safeG > b.bagWeightG ? safeG : b.bagWeightG;
           return b.copyWith(
-            remainingG: actualRemainingG.clamp(0.0, b.bagWeightG),
+            bagWeightG: nextBag,
+            remainingG: safeG,
           );
         }
         return b;
@@ -1525,11 +1649,18 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
     _persist();
   }
 
-  void toggleBeanArchive(String beanId) {
+  void deleteBean(String beanId) {
+    final remaining = state.beans.where((b) => b.id != beanId).toList();
+    final wasActive = state.draft.beanId == beanId;
+    final nextActive =
+        remaining.where((b) => !b.isFrozen).firstOrNull ?? remaining.firstOrNull;
     state = state.copyWith(
-      beans: state.beans
-          .map((b) => b.id == beanId ? b.copyWith(isArchived: !b.isArchived) : b)
-          .toList(),
+      beans: remaining,
+      draft: wasActive
+          ? (nextActive != null
+              ? state.draft.copyWith(beanId: nextActive.id)
+              : state.draft.copyWith(clearBean: true))
+          : state.draft,
     );
     _persist();
   }

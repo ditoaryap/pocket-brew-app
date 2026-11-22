@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/widgets/pocket_card.dart';
+import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/brew_recipe_scaler.dart';
 import '../../domain/models/enums.dart';
@@ -49,9 +50,24 @@ class BrewLogDetailScreen extends ConsumerWidget {
               title: 'Detail Seduhan',
               onBack: () => context.canPop() ? context.pop() : context.go('/log'),
               trailing: IconButton(
-                onPressed: () {
+                onPressed: () async {
+                  final ok = await showPocketDeleteDialog(
+                    context,
+                    title: 'Hapus Catatan Seduhan?',
+                    message:
+                        'Hapus riwayat seduhan "${log.beanName}" ini secara permanen? Tindakan ini tidak bisa dibatalkan.',
+                    confirmLabel: 'Hapus',
+                  );
+                  if (!ok) return;
                   notifier.deleteLog(log.id);
-                  context.go('/log');
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Catatan seduhan berhasil dihapus.'),
+                      ),
+                    );
+                    context.go('/log');
+                  }
                 },
                 icon: Icon(Icons.delete_outline_rounded, color: c.statusError),
                 tooltip: 'Hapus Log',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme/pocket_theme.dart';
@@ -8,14 +9,48 @@ import '../../core/widgets/pocket_card.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 
-/// Screen 19 · Belajar Seduh — Complete Pour-Over Education Hub (7 Structured Topics).
-class LearnHubScreen extends ConsumerWidget {
+/// Screen 19 · Belajar Seduh (Pro-Standard Pour-Over Academy — 9 Structured Topics):
+/// Organized by learning tracks with clear SCA / World Brewers Cup / modern extraction
+/// references, interactive visual labs, and readable mobile cards.
+class LearnHubScreen extends ConsumerStatefulWidget {
   const LearnHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LearnHubScreen> createState() => _LearnHubScreenState();
+}
+
+class _LearnHubScreenState extends ConsumerState<LearnHubScreen> {
+  String _track = 'all'; // all | foundation | craft | gear
+
+  bool _matchesTrack(String category) {
+    if (_track == 'all') return true;
+    if (_track == 'foundation') {
+      return category == 'beans' ||
+          category == 'basics' ||
+          category == 'water';
+    }
+    if (_track == 'craft') {
+      return category == 'pour' ||
+          category == 'wheel' ||
+          category == 'troubleshoot' ||
+          category == 'iced';
+    }
+    return category == 'dripper' ||
+        category == 'filter' ||
+        category == 'grinder';
+  }
+
+  String _trackBadge(String category) => switch (category) {
+        'beans' || 'basics' || 'water' => 'Pondasi',
+        'pour' || 'wheel' || 'troubleshoot' || 'iced' => 'Teknik & Rasa',
+        _ => 'Peralatan',
+      };
+
+  @override
+  Widget build(BuildContext context) {
     final c = context.colors;
     final guides = ref.watch(pocketStoreProvider).guides;
+    final shown = guides.where((g) => _matchesTrack(g.category)).toList();
 
     return Scaffold(
       body: SafeArea(
@@ -32,15 +67,102 @@ class LearnHubScreen extends ConsumerWidget {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
+                padding: const EdgeInsets.fromLTRB(18, 4, 18, 30),
                 children: [
-                  Text(
-                    'Panduan ringkas & praktis untuk pemula hingga rumahan — dari dasar rasio, teknik tuang, perbaikan rasa, hingga air & alat seduh.',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  // Intro Reference Card
+                  PocketCard(
+                    backgroundColor: c.tintSage,
+                    borderColor: c.brandSage.withValues(alpha: 0.25),
+                    elevated: false,
+                    radius: 20,
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: c.surfaceCard,
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          alignment: Alignment.center,
+                          child: PocketIcon(
+                            PocketIconType.book,
+                            size: 18,
+                            color: c.brandSage,
+                          ),
+                        ),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kurikulum Pour-Over Rumahan',
+                                style: PocketTheme.ui(
+                                  size: 13.8,
+                                  weight: 800,
+                                  color: c.brandSage,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Disusun dari standar SCA, World Brewers Cup, dan riset ekstraksi modern — disajikan ringkas, visual, dan langsung bisa dipraktikkan.',
+                                style: PocketTheme.ui(
+                                  size: 12.2,
+                                  weight: 500,
+                                  height: 1.44,
+                                  color: c.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 14),
-                  ...List.generate(guides.length, (i) {
-                    final g = guides[i];
+                  const SizedBox(height: 12),
+
+                  // Track Filter Pills
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ('all', 'Semua (${guides.length})'),
+                        ('foundation', 'Kopi & Pondasi'),
+                        ('craft', 'Teknik & Rasa'),
+                        ('gear', 'Alat & Grinder'),
+                      ].map((t) {
+                        final (id, label) = t;
+                        final active = _track == id;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 7),
+                          child: PocketPill(
+                            label: label,
+                            height: 34,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            padding: const EdgeInsets.symmetric(horizontal: 13),
+                            backgroundColor:
+                                active ? c.brandEspresso : c.surfaceCard,
+                            foregroundColor:
+                                active ? c.textOnAccent : c.textSecondary,
+                            borderColor:
+                                active ? Colors.transparent : c.borderSubtle,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _track = id);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 13),
+
+                  ...List.generate(shown.length, (i) {
+                    final g = shown[i];
                     final (
                       PocketIconType icon,
                       Color cardBg,
@@ -49,6 +171,14 @@ class LearnHubScreen extends ConsumerWidget {
                       Color titleColor,
                       String route,
                     ) = switch (g.category) {
+                      'beans' => (
+                          PocketIconType.bean,
+                          c.tintTerracotta,
+                          c.brandTerracotta,
+                          c.textOnAccent,
+                          c.brandTerracottaInk,
+                          '/learn/beans',
+                        ),
                       'basics' => (
                           PocketIconType.flame,
                           c.tintHoney,
@@ -59,10 +189,10 @@ class LearnHubScreen extends ConsumerWidget {
                         ),
                       'pour' => (
                           PocketIconType.play,
+                          c.surfaceCard,
                           c.tintTerracotta,
-                          c.brandTerracotta,
-                          c.textOnAccent,
                           c.brandTerracottaInk,
+                          c.textPrimary,
                           '/learn/pour',
                         ),
                       'wheel' => (
@@ -81,68 +211,73 @@ class LearnHubScreen extends ConsumerWidget {
                           c.brandSage,
                           '/learn/troubleshoot',
                         ),
-                      'beans' => (
-                          PocketIconType.bean,
-                          c.surfaceCard,
-                          c.tintBerry,
-                          c.brandBerry,
-                          c.textPrimary,
-                          '/learn/beans',
-                        ),
-                      'water' => (
+                      'iced' => (
                           PocketIconType.snowflake,
                           c.tintIce,
                           c.brandIce,
                           c.textOnAccent,
                           c.brandIce,
+                          '/learn/iced',
+                        ),
+                      'water' => (
+                          PocketIconType.snowflake,
+                          c.surfaceCard,
+                          c.tintIce,
+                          c.brandIce,
+                          c.textPrimary,
                           '/learn/water',
                         ),
-                      'dripper' => (
+                      'dripper' || 'filter' => (
                           PocketIconType.v60,
-                          c.surfaceCard,
-                          c.tintTerracotta,
-                          c.brandTerracottaInk,
-                          c.textPrimary,
-                          '/learn/dripper',
-                        ),
-                      _ => (
-                          PocketIconType.filterPaper,
                           c.surfaceCard,
                           c.tintSage,
                           c.brandSage,
                           c.textPrimary,
-                          '/learn/filter',
+                          '/learn/dripper',
+                        ),
+                      _ => (
+                          PocketIconType.burrGear,
+                          c.surfaceCard,
+                          c.tintHoney,
+                          c.brandHoney,
+                          c.textPrimary,
+                          '/learn/grinder',
                         ),
                     };
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 11),
                       child: PocketEntrance(
-                        delayMs: (i * 25).clamp(0, 160),
+                        key: ValueKey('${_track}_${g.id}'),
+                        delayMs: (i * 25).clamp(0, 150),
                         offsetY: 8,
                         child: PocketCard(
                           backgroundColor: cardBg,
+                          borderColor: cardBg == c.surfaceCard
+                              ? c.borderSubtle
+                              : iconBg.withValues(alpha: 0.25),
                           elevated: cardBg == c.surfaceCard,
                           padding: const EdgeInsets.all(15),
-                          radius: 20,
+                          radius: 21,
                           onTap: () => context.push(route),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    width: 38,
-                                    height: 38,
+                                    width: 40,
+                                    height: 40,
                                     decoration: BoxDecoration(
                                       color: iconBg,
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(13),
                                     ),
                                     alignment: Alignment.center,
                                     child: PocketIcon(
                                       icon,
                                       color: iconFg,
-                                      size: 19,
+                                      size: 20,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -151,10 +286,36 @@ class LearnHubScreen extends ConsumerWidget {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        Text.rich(
+                                          TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: _trackBadge(g.category),
+                                                style: PocketTheme.ui(
+                                                  size: 10.5,
+                                                  weight: 800,
+                                                  color: cardBg == c.surfaceCard
+                                                      ? iconFg
+                                                      : titleColor,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text:
+                                                    ' · ${g.readMinutes} mnt baca',
+                                                style: PocketTheme.mono(
+                                                  size: 10.5,
+                                                  weight: FontWeight.w600,
+                                                  color: c.textTertiary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
                                         Text(
                                           g.title,
                                           style: PocketTheme.ui(
-                                            size: 14,
+                                            size: 14.5,
                                             weight: 800,
                                             height: 1.25,
                                             color: titleColor,
@@ -162,11 +323,11 @@ class LearnHubScreen extends ConsumerWidget {
                                         ),
                                         const SizedBox(height: 3),
                                         Text(
-                                          '${g.subtitle} · ${g.readMinutes} mnt',
+                                          g.subtitle,
                                           style: PocketTheme.ui(
-                                            size: 11.2,
+                                            size: 11.8,
                                             weight: 500,
-                                            height: 1.35,
+                                            height: 1.38,
                                             color: c.textSecondary,
                                           ),
                                         ),
@@ -174,10 +335,13 @@ class LearnHubScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  PocketIcon(
-                                    PocketIconType.chevronRight,
-                                    size: 17,
-                                    color: c.textTertiary,
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: PocketIcon(
+                                      PocketIconType.chevronRight,
+                                      size: 17,
+                                      color: c.textTertiary,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -192,9 +356,9 @@ class LearnHubScreen extends ConsumerWidget {
                                         backgroundColor: cardBg == c.surfaceCard
                                             ? c.surfaceElevated
                                             : c.surfaceCard
-                                                .withValues(alpha: 0.78),
+                                                .withValues(alpha: 0.84),
                                         foregroundColor: c.textSecondary,
-                                        fontSize: 10.5,
+                                        fontSize: 10.6,
                                       ),
                                     )
                                     .toList(),

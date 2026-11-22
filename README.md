@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ditoaryap/pocket-brew-app/releases/latest"><strong>Unduh APK Terbaru (v1.0.3)</strong></a>
+  <a href="https://github.com/ditoaryap/pocket-brew-app/releases/latest"><strong>Unduh APK Terbaru (v1.0.4)</strong></a>
   &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Catatan Perubahan</a>
 </p>
@@ -40,7 +40,7 @@ Semua perhitungan dilakukan langsung di perangkat — ringan, instan, dan tetap 
 - **Stok Biji Kopi & Masa Paling Enak**
   Pantau sisa gram biji di rumah, tanggal sangrai, masa paling enak (*resting window*), dan status penyimpanan cadangan (*freezer*).
 - **Belajar Seduh & Roda Rasa Kopi**
-  Berisi 8 panduan ringkas untuk pemula maupun penyeduh rutin, termasuk animasi interaktif 5 teknik tuangan (*Spiral, Tengah, Pulse, Osmotic Flow, Swirl*) dan eksplorasi lengkap Roda Rasa Kopi (SCA).
+  Berisi 9 materi ringkas berstandar SCA & World Brewers Cup — dari ensiklopedia biji kopi, ilmu ekstraksi, animasi interaktif 5 teknik tuangan (*Spiral, Center, Pulse, Osmotic, Swirl*), Roda Rasa Kopi (SCA), Japanese Iced, kimia air, hingga perawatan grinder.
 - **Mode Terang & Gelap + Cadangan Data**
   Nyaman dipakai pagi maupun malam dengan tema *Soft Oat* (Terang) dan *Espresso Dusk* (Gelap). Data juga bisa dicadangkan dan dipulihkan kapan saja dari menu Pengaturan.
 
@@ -49,7 +49,7 @@ Semua perhitungan dilakukan langsung di perangkat — ringan, instan, dan tetap 
 ## Cara Pasang di Android
 
 1. Buka halaman [**GitHub Releases**](https://github.com/ditoaryap/pocket-brew-app/releases/latest).
-2. Di bagian **Assets**, unduh file **`pocket-brew-v1.0.3.apk`**.
+2. Di bagian **Assets**, unduh file **`pocket-brew-v1.0.4.apk`**.
 3. Buka file yang selesai diunduh lalu tekan **Install**. Jika diminta izin memasang dari browser/pengelola file, izinkan terlebih dahulu.
 
 ### Cara Update ke Versi Baru (Tanpa Kehilangan Data)
@@ -65,5 +65,5 @@ Pocket Brew tidak mengumpulkan data pribadi, tidak memerlukan login, dan tidak m
 ---
 
 <p align="center">
-  Dibuat dengan tenang untuk meja seduh rumahan · <a href="CHANGELOG.md">Lihat Changelog v1.0.3</a>
+  Dibuat dengan tenang untuk meja seduh rumahan · <a href="CHANGELOG.md">Lihat Changelog v1.0.4</a>
 </p>

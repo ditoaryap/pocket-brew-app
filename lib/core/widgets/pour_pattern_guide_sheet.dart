@@ -8,7 +8,7 @@ import 'canvas/spiral_pour_diagram.dart';
 import 'pocket_card.dart';
 
 /// Interactive animated pour-technique guide popup modal.
-/// Accessible from ANY pour-pattern selector (Pour Stage Editor, Brew session stage sheet, etc.)
+/// Accessible from ANY pour-pattern selector (Pour Stage Editor, Brew session stage sheet, Timer)
 /// with 60fps looping animated motion demo + detailed, beginner-friendly instructions.
 Future<void> showPourPatternGuideSheet(
   BuildContext context, {
@@ -24,6 +24,71 @@ Future<void> showPourPatternGuideSheet(
       initialType: PourDemoType.fromPattern(initialPattern),
     ),
   );
+}
+
+/// Uniform, tactile, never-squished "Info Pola" pill button used beside every
+/// pour-pattern selector (Edit Tahapan, Brew sesi ini, Timer Seduh).
+class PourInfoButton extends StatelessWidget {
+  const PourInfoButton({
+    super.key,
+    required this.pattern,
+    this.label = 'Info Pola',
+  });
+
+  final PourPattern pattern;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return PocketTapScale(
+      pressedScale: 0.94,
+      onTap: () => showPourPatternGuideSheet(
+        context,
+        initialPattern: pattern,
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 5, 11, 5),
+        decoration: BoxDecoration(
+          color: c.tintTerracotta,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: c.brandTerracotta.withValues(alpha: c.isDark ? 0.42 : 0.28),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 19,
+              height: 19,
+              decoration: BoxDecoration(
+                color: c.brandTerracotta,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.play_arrow_rounded,
+                size: 13,
+                color: c.textOnAccent,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: PocketTheme.ui(
+                size: 11.5,
+                weight: 800,
+                height: 1.15,
+                color: c.brandTerracottaInk,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _PourPatternGuideSheet extends StatefulWidget {

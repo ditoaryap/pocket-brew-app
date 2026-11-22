@@ -317,7 +317,7 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
                         TextField(
                           controller: _nameCtrl,
                           decoration: const InputDecoration(
-                            labelText: 'Nama Biji / Origin',
+                            labelText: 'Nama Kopi / Origin',
                             hintText: 'Contoh: Ethiopia Guji Uraga / Gayo Pantan',
                           ),
                         ),
@@ -490,7 +490,7 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Berat Biji Saat Ini',
+                                'Berat Kopi Saat Ini',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: PocketTheme.ui(
@@ -1151,8 +1151,8 @@ class _AddBeanScreenState extends ConsumerState<AddBeanScreen> {
               padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
               child: PocketButton(
                 label: _isEditing
-                    ? 'Simpan Perubahan Biji'
-                    : 'Simpan Biji (${_weightG.round()}g)',
+                    ? 'Simpan Perubahan Kopi'
+                    : 'Simpan Kopi (${_weightG.round()}g)',
                 pocketIcon: PocketIconType.check,
                 backgroundColor: c.brandEspresso,
                 foregroundColor: c.textOnAccent,

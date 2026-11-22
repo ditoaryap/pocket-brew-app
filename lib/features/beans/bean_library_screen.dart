@@ -5,12 +5,19 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
+import '../../core/widgets/canvas/coffee_atmosphere.dart';
 import '../../core/widgets/pocket_card.dart';
 import '../../core/widgets/pocket_confirm_dialog.dart';
+import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/engines/bean_resting_calculator.dart';
+import '../../domain/models/enums.dart';
 
-/// Screen 13 · Biji Kopi & Stok (Aktif / Cadangan + Last-Cup Auto-scale + Delete with confirmation).
+/// Screen 13 · Koleksi Kopi & Stok (Editorial Redesign):
+/// - Clean "Kopi / Biji Kopi" terminology (zero ambiguous standalone "Biji" & zero grinder "klik" clutter!).
+/// - Displays coffee-relevant signals: Roastery, Origin, Process, Roast tone strip,
+///   Tasting Notes chips, AnimatedCoffeeStockBar, remaining cups & freshness badge.
+/// - 2-Tab Aktif | Cadangan + Last-Cup Auto-Scale + Delete with confirmation modal.
 class BeanLibraryScreen extends ConsumerStatefulWidget {
   const BeanLibraryScreen({super.key});
 
@@ -31,17 +38,25 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
       context,
       title: 'Hapus Biji Kopi?',
       message:
-          'Biji "$beanName" akan dihapus permanen dari daftar stokmu. Riwayat seduhan yang sudah tercatat tetap aman.',
-      confirmLabel: 'Hapus Biji',
+          'Biji kopi "$beanName" akan dihapus permanen dari daftar stokmu. Riwayat seduhan yang sudah tercatat tetap aman.',
+      confirmLabel: 'Hapus Kopi',
     );
     if (!ok) return;
     ref.read(pocketStoreProvider.notifier).deleteBean(beanId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$beanName dihapus dari stok biji.')),
+        SnackBar(content: Text('$beanName dihapus dari koleksi kopi.')),
       );
     }
   }
+
+  Color _roastAccentColor(RoastLevel level, PocketColors c) => switch (level) {
+        RoastLevel.light => c.brandHoney,
+        RoastLevel.lightMedium => c.brandTerracotta,
+        RoastLevel.medium => const Color(0xFF8B5A3C),
+        RoastLevel.mediumDark => const Color(0xFF5D3A26),
+        RoastLevel.dark => const Color(0xFF3E271A),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -56,18 +71,39 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
     final visibleShown = shown.take(_visibleCount).toList();
     final hasMore = shown.length > visibleShown.length;
 
+    final totalActiveG =
+        activeList.fold<double>(0, (sum, b) => sum + b.remainingG);
+    final totalActiveCups = (totalActiveG / 15.0).floor();
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 108),
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 110),
           children: [
+            // 1. Clean Editorial Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    'Biji Kopi',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Koleksi Kopi',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        activeList.isEmpty
+                            ? 'Pantau stok & masa paling enak biji kopi'
+                            : '${activeList.length} kantong aktif · ${totalActiveG.round()}g (~$totalActiveCups cup)',
+                        style: PocketTheme.mono(
+                          size: 11.2,
+                          weight: FontWeight.w600,
+                          color: c.textTertiary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -77,18 +113,18 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                   foregroundColor: c.textOnAccent,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 13,
-                    vertical: 8,
+                    vertical: 9,
                   ),
                   onTap: () => context.push('/beans/add'),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
-            // Smooth 2-Tab Sliding Capsule: Aktif | Cadangan (No Archive!)
+            // 2. Smooth 2-Tab Sliding Capsule: Aktif | Cadangan
             Container(
-              height: 42,
-              padding: const EdgeInsets.all(3),
+              height: 44,
+              padding: const EdgeInsets.all(3.5),
               decoration: BoxDecoration(
                 color: c.surfaceElevated,
                 borderRadius: BorderRadius.circular(999),
@@ -97,7 +133,7 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
               child: Stack(
                 children: [
                   AnimatedAlign(
-                    duration: const Duration(milliseconds: 220),
+                    duration: const Duration(milliseconds: 230),
                     curve: PocketCurves.gentleSpring,
                     alignment: _tab == 0
                         ? Alignment.centerLeft
@@ -114,7 +150,7 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                               : [
                                   BoxShadow(
                                     color: const Color(0xFF1F1915)
-                                        .withValues(alpha: 0.06),
+                                        .withValues(alpha: 0.07),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -125,7 +161,7 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                   ),
                   Row(
                     children: [
-                      _BeanTab(
+                      _CoffeeTab(
                         label: 'Aktif (${activeList.length})',
                         active: _tab == 0,
                         onTap: () {
@@ -136,7 +172,7 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
                           });
                         },
                       ),
-                      _BeanTab(
+                      _CoffeeTab(
                         label: 'Cadangan (${reserveList.length})',
                         active: _tab == 1,
                         onTap: () {
@@ -154,318 +190,384 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
             ),
             const SizedBox(height: 14),
 
-            if (shown.isEmpty)
-              PocketCard(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.grain_rounded,
-                      size: 38,
-                      color: c.brandTerracotta,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      _tab == 1
-                          ? 'Belum ada stok cadangan'
-                          : 'Belum ada biji kopi di sini',
-                      textAlign: TextAlign.center,
-                      style: PocketTheme.ui(
-                        size: 16,
-                        weight: 800,
-                        color: c.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _tab == 1
-                          ? 'Biji yang kamu tandai sebagai Stok Cadangan akan tersimpan rapi di sini.'
-                          : 'Tambahkan kantong biji baru atau sisa stok agar masa paling enak & sisa gram terpantau otomatis.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 14),
-                    FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: c.brandEspresso,
-                        foregroundColor: c.textOnAccent,
-                        minimumSize: const Size(190, 46),
-                      ),
-                      onPressed: () => context.push('/beans/add'),
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('Tambah Biji Baru'),
-                    ),
-                  ],
-                ),
-              )
-            else ...[
-              ...visibleShown.map((bean) {
-                final info = BeanRestingCalculator.evaluate(
-                  bean: bean,
-                  prefs: state.prefs,
-                );
-                final isSelected = state.draft.beanId == bean.id;
-                final pillBg = info.isLastCupAlert
-                    ? c.tintHoney
-                    : (info.stage == BeanFreshnessStage.resting
-                        ? c.tintIce
-                        : c.tintSage);
-                final pillFg = info.isLastCupAlert
-                    ? c.brandHoney
-                    : (info.stage == BeanFreshnessStage.resting
-                        ? c.brandIce
-                        : c.brandSage);
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 11),
-                  child: PocketCard(
-                    backgroundColor:
-                        info.isLastCupAlert ? c.tintHoney : c.surfaceCard,
-                    borderColor: isSelected && !info.isLastCupAlert
-                        ? c.brandTerracotta
-                        : null,
-                    elevated: !info.isLastCupAlert,
-                    padding: const EdgeInsets.all(15),
-                    onTap: () => context.push('/beans/${bean.id}'),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    bean.name,
-                                    style: PocketTheme.ui(
-                                      size: 15,
-                                      weight: 800,
-                                      height: 1.25,
-                                      color: c.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    '${bean.roastery} · ${bean.process} · ${bean.roastLevel.shortLabel}',
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
+            // 3. Animated List or Empty State
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: PocketCurves.smoothOut,
+              child: shown.isEmpty
+                  ? PocketCard(
+                      key: ValueKey('empty_$_tab'),
+                      padding: const EdgeInsets.all(24),
+                      radius: 22,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 54,
+                            height: 54,
+                            decoration: BoxDecoration(
+                              color: c.tintTerracotta,
+                              borderRadius: BorderRadius.circular(18),
                             ),
-                            const SizedBox(width: 8),
-                            PocketTapScale(
-                              onTap: () => _confirmDeleteBean(
-                                beanId: bean.id,
-                                beanName: bean.name,
-                              ),
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: c.statusError.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.delete_outline_rounded,
-                                  size: 16,
-                                  color: c.statusError,
-                                ),
-                              ),
+                            alignment: Alignment.center,
+                            child: PocketIcon(
+                              PocketIconType.bean,
+                              size: 26,
+                              color: c.brandTerracottaInk,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            PocketPill(
-                              label: info.isLastCupAlert
-                                  ? 'Sisa ${bean.remainingG.round()}g · Terakhir!'
-                                  : info.badgeText,
-                              backgroundColor: pillBg,
-                              foregroundColor: pillFg,
-                              fontSize: 10.5,
-                            ),
-                            if (bean.remainingG <= 0.1)
-                              PocketPill(
-                                label: 'Stok Habis',
-                                backgroundColor:
-                                    c.statusError.withValues(alpha: 0.14),
-                                foregroundColor: c.statusError,
-                                fontSize: 10.5,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${bean.remainingG.round()}g / ${bean.bagWeightG.round()}g',
-                              style: PocketTheme.mono(
-                                size: 12.5,
-                                weight: FontWeight.w800,
-                                color: c.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                '~${info.cupsRemaining} cup · ${bean.preferredHotClick != null ? '${bean.preferredHotClick} klik' : 'Belum dial-in'}',
-                                textAlign: TextAlign.right,
-                                style: PocketTheme.mono(
-                                  size: 11,
-                                  color: c.textTertiary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(99),
-                          child: LinearProgressIndicator(
-                            value: info.stockFraction,
-                            minHeight: 6,
-                            backgroundColor: c.surfaceElevated,
-                            color: info.isLastCupAlert
-                                ? c.brandHoney
-                                : c.brandSage,
                           ),
-                        ),
-                        const SizedBox(height: 11),
-                        if (info.isLastCupAlert)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: c.brandEspresso,
-                                    foregroundColor: c.textOnAccent,
-                                    minimumSize: const Size(0, 40),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
+                          const SizedBox(height: 12),
+                          Text(
+                            _tab == 1
+                                ? 'Belum ada stok cadangan'
+                                : 'Belum ada biji kopi di sini',
+                            textAlign: TextAlign.center,
+                            style: PocketTheme.ui(
+                              size: 16,
+                              weight: 800,
+                              color: c.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _tab == 1
+                                ? 'Biji kopi yang disimpan di freezer atau ditandai sebagai cadangan akan muncul rapi di sini.'
+                                : 'Tambahkan kantong biji kopi pertamamu agar masa paling enak dan sisa gram selalu terpantau otomatis.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: 210,
+                            child: PocketButton(
+                              label: 'Tambah Kopi Baru',
+                              pocketIcon: PocketIconType.plus,
+                              height: 46,
+                              backgroundColor: c.brandEspresso,
+                              foregroundColor: c.textOnAccent,
+                              onTap: () => context.push('/beans/add'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      key: ValueKey('list_${_tab}_${visibleShown.length}'),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ...List.generate(visibleShown.length, (idx) {
+                          final bean = visibleShown[idx];
+                          final info = BeanRestingCalculator.evaluate(
+                            bean: bean,
+                            prefs: state.prefs,
+                          );
+                          final isSelected = state.draft.beanId == bean.id;
+                          final roastBarColor =
+                              _roastAccentColor(bean.roastLevel, c);
+                          final pillBg = info.isLastCupAlert
+                              ? c.tintHoney
+                              : (info.stage == BeanFreshnessStage.resting
+                                  ? c.tintIce
+                                  : c.tintSage);
+                          final pillFg = info.isLastCupAlert
+                              ? c.brandHoney
+                              : (info.stage == BeanFreshnessStage.resting
+                                  ? c.brandIce
+                                  : c.brandSage);
+                          final roastDays = DateTime.now()
+                              .difference(bean.roastDate)
+                              .inDays
+                              .clamp(0, 999);
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: PocketEntrance(
+                              delayMs: (idx * 30).clamp(0, 140),
+                              offsetY: 8,
+                              child: PocketCard(
+                                backgroundColor: info.isLastCupAlert
+                                    ? c.tintHoney
+                                    : c.surfaceCard,
+                                borderColor: isSelected && !info.isLastCupAlert
+                                    ? c.brandTerracotta
+                                    : (info.isLastCupAlert
+                                        ? c.brandHoney.withValues(alpha: 0.35)
+                                        : c.borderSubtle),
+                                borderWidth:
+                                    isSelected && !info.isLastCupAlert ? 1.4 : 1,
+                                elevated: !info.isLastCupAlert,
+                                radius: 22,
+                                padding: const EdgeInsets.all(15),
+                                onTap: () => context.push('/beans/${bean.id}'),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Top Row: Roast Accent Bar + Name/Origin/Roastery + Delete
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 4.5,
+                                          height: 40,
+                                          margin: const EdgeInsets.only(top: 2),
+                                          decoration: BoxDecoration(
+                                            color: roastBarColor,
+                                            borderRadius:
+                                                BorderRadius.circular(99),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      bean.name,
+                                                      style: PocketTheme.ui(
+                                                        size: 15.8,
+                                                        weight: 800,
+                                                        height: 1.22,
+                                                        color: c.textPrimary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 3),
+                                              Text(
+                                                [
+                                                  bean.roastery,
+                                                  if (bean.origin.isNotEmpty)
+                                                    bean.origin,
+                                                  bean.process,
+                                                  bean.roastLevel.shortLabel,
+                                                ].join(' · '),
+                                                style: PocketTheme.ui(
+                                                  size: 11.8,
+                                                  weight: 500,
+                                                  height: 1.35,
+                                                  color: c.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        PocketTapScale(
+                                          onTap: () => _confirmDeleteBean(
+                                            beanId: bean.id,
+                                            beanName: bean.name,
+                                          ),
+                                          child: Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: c.statusError
+                                                  .withValues(alpha: 0.11),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Icon(
+                                              Icons.delete_outline_rounded,
+                                              size: 16,
+                                              color: c.statusError,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  onPressed: () {
-                                    notifier.startLastCupBrew(bean);
-                                    context.go('/brew');
-                                  },
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      'Auto-scale ${bean.remainingG.round()}g →',
-                                      style: const TextStyle(fontSize: 12.5),
+                                    const SizedBox(height: 10),
+
+                                    // Freshness Status + Tasting Notes Chips (Purely coffee-focused!)
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 6,
+                                      children: [
+                                        PocketPill(
+                                          label: info.isLastCupAlert
+                                              ? 'Sisa ${bean.remainingG.round()}g · Terakhir!'
+                                              : info.badgeText,
+                                          backgroundColor: pillBg,
+                                          foregroundColor: pillFg,
+                                          fontSize: 10.6,
+                                        ),
+                                        if (isSelected)
+                                          PocketPill(
+                                            label: 'Sedang Dipilih',
+                                            backgroundColor: c.tintTerracotta,
+                                            foregroundColor:
+                                                c.brandTerracottaInk,
+                                            fontSize: 10.5,
+                                          ),
+                                        if (bean.remainingG <= 0.1)
+                                          PocketPill(
+                                            label: 'Stok Habis',
+                                            backgroundColor: c.statusError
+                                                .withValues(alpha: 0.14),
+                                            foregroundColor: c.statusError,
+                                            fontSize: 10.5,
+                                          ),
+                                        ...bean.tastingNotes.take(3).map(
+                                              (note) => PocketPill(
+                                                label: note,
+                                                backgroundColor: c.tintBerry,
+                                                foregroundColor: c.brandBerry,
+                                                fontSize: 10.4,
+                                              ),
+                                            ),
+                                      ],
                                     ),
-                                  ),
+                                    const SizedBox(height: 12),
+
+                                    // Clean Stock Progress (Grams + Cups Remaining + Roast Age — ZERO grinder clicks!)
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${bean.remainingG.round()}g / ${bean.bagWeightG.round()}g',
+                                          style: PocketTheme.mono(
+                                            size: 12.8,
+                                            weight: FontWeight.w800,
+                                            color: c.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            '~${info.cupsRemaining} cup · Sangrai $roastDays hr lalu',
+                                            textAlign: TextAlign.right,
+                                            style: PocketTheme.mono(
+                                              size: 11,
+                                              weight: FontWeight.w600,
+                                              color: c.textTertiary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    AnimatedCoffeeStockBar(
+                                      fraction: info.stockFraction,
+                                      height: 6.5,
+                                      trackColor: c.surfaceElevated,
+                                      fillColor: info.isLastCupAlert
+                                          ? c.brandHoney
+                                          : c.brandSage,
+                                    ),
+                                    const SizedBox(height: 12),
+
+                                    // Action Row
+                                    if (info.isLastCupAlert)
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: PocketButton(
+                                              label:
+                                                  'Auto-scale ${bean.remainingG.round()}g →',
+                                              height: 40,
+                                              fontSize: 12.4,
+                                              backgroundColor: c.brandEspresso,
+                                              foregroundColor: c.textOnAccent,
+                                              onTap: () {
+                                                notifier.startLastCupBrew(bean);
+                                                context.go('/brew');
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: PocketButton(
+                                              label: 'Koreksi Stok',
+                                              height: 40,
+                                              fontSize: 12.2,
+                                              backgroundColor: c.surfaceCard,
+                                              foregroundColor: c.textPrimary,
+                                              borderColor: c.borderStrong,
+                                              onTap: () => context
+                                                  .push('/beans/${bean.id}'),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    else
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: PocketButton(
+                                              label: 'Detail & Stok',
+                                              height: 40,
+                                              fontSize: 12.2,
+                                              backgroundColor:
+                                                  c.surfaceElevated,
+                                              foregroundColor: c.textPrimary,
+                                              onTap: () => context
+                                                  .push('/beans/${bean.id}'),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: PocketButton(
+                                              label: 'Seduh Kopi Ini',
+                                              height: 40,
+                                              fontSize: 12.4,
+                                              backgroundColor:
+                                                  c.brandTerracotta,
+                                              foregroundColor: c.textOnAccent,
+                                              onTap: () {
+                                                notifier.updateDraft(
+                                                  beanId: bean.id,
+                                                  clickSetting:
+                                                      bean.preferredHotClick ??
+                                                          state.draft
+                                                              .clickSetting,
+                                                );
+                                                context.go('/brew');
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size(0, 40),
-                                  side: BorderSide(color: c.borderStrong),
+                            ),
+                          );
+                        }),
+                        if (hasMore)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Menampilkan ${visibleShown.length} dari ${shown.length} biji kopi',
+                                  style: PocketTheme.mono(
+                                    size: 11,
+                                    color: c.textTertiary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                PocketButton(
+                                  label: 'Muat Lebih Banyak (+$_pageSize)',
+                                  height: 44,
+                                  fontSize: 13,
+                                  backgroundColor: c.surfaceElevated,
                                   foregroundColor: c.textPrimary,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(999),
+                                  onTap: () => setState(
+                                    () => _visibleCount += _pageSize,
                                   ),
                                 ),
-                                onPressed: () =>
-                                    context.push('/beans/${bean.id}'),
-                                child: const Text(
-                                  'Koreksi stok',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        else
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size(0, 38),
-                                    side: BorderSide(color: c.borderStrong),
-                                    foregroundColor: c.textPrimary,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                  ),
-                                  onPressed: () =>
-                                      context.push('/beans/${bean.id}'),
-                                  child: const Text(
-                                    'Detail & Stok',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: c.brandTerracotta,
-                                    foregroundColor: c.textOnAccent,
-                                    minimumSize: const Size(0, 38),
-                                  ),
-                                  onPressed: () {
-                                    notifier.updateDraft(
-                                      beanId: bean.id,
-                                      clickSetting: bean.preferredHotClick ??
-                                          state.draft.clickSetting,
-                                    );
-                                    context.go('/brew');
-                                  },
-                                  child: const Text(
-                                    'Brew Biji Ini',
-                                    style: TextStyle(fontSize: 12.5),
-                                  ),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                       ],
                     ),
-                  ),
-                );
-              }),
-              if (hasMore)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Menampilkan ${visibleShown.length} dari ${shown.length} biji kopi',
-                        style: PocketTheme.mono(
-                          size: 11,
-                          color: c.textTertiary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      PocketButton(
-                        label: 'Muat Lebih Banyak (+$_pageSize)',
-                        height: 44,
-                        fontSize: 13,
-                        backgroundColor: c.surfaceElevated,
-                        foregroundColor: c.textPrimary,
-                        onTap: () =>
-                            setState(() => _visibleCount += _pageSize),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+            ),
           ],
         ),
       ),
@@ -473,8 +575,8 @@ class _BeanLibraryScreenState extends ConsumerState<BeanLibraryScreen> {
   }
 }
 
-class _BeanTab extends StatelessWidget {
-  const _BeanTab({
+class _CoffeeTab extends StatelessWidget {
+  const _CoffeeTab({
     required this.label,
     required this.active,
     required this.onTap,
@@ -498,7 +600,7 @@ class _BeanTab extends StatelessWidget {
               label,
               style: PocketTheme.ui(
                 size: 12.5,
-                weight: active ? 700 : 600,
+                weight: active ? 800 : 600,
                 color: active ? c.textPrimary : c.textSecondary,
               ),
             ),

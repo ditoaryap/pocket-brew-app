@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
+import '../../core/widgets/canvas/coffee_atmosphere.dart';
 import '../../core/widgets/pocket_card.dart';
 import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
@@ -262,7 +263,7 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                                 runSpacing: 7,
                                 children: [
                                   PocketPill(
-                                    label: 'Semua Biji',
+                                    label: 'Semua Kopi',
                                     height: 32,
                                     fontSize: 11.5,
                                     backgroundColor: draftBean == null
@@ -507,7 +508,7 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                               },
                             )
                           : null,
-                      hintText: 'Cari biji, resep, notes...',
+                      hintText: 'Cari kopi, resep, notes...',
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 11,
@@ -698,20 +699,43 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
             else ...[
               ...visibleLogs.map((log) {
                 final isIced = log.mode == BrewMode.iced;
+                final modeAccent = isIced ? c.brandIce : c.brandTerracotta;
+                final modeInk = isIced ? c.brandIce : c.brandTerracottaInk;
+                final modeTint = isIced ? c.tintIce : c.tintTerracotta;
+                final effectiveTotal = log.totalLiquidG > 0
+                    ? log.totalLiquidG
+                    : (log.hotWaterG + log.iceG).clamp(1.0, 5000.0);
+                final hotFraction = isIced
+                    ? (log.hotWaterG / effectiveTotal).clamp(0.25, 0.88)
+                    : 1.0;
+
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 11),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: RepaintBoundary(
                     child: PocketCard(
                       padding: const EdgeInsets.all(14),
-                      radius: 20,
+                      radius: 21,
+                      borderColor: isIced
+                          ? c.brandIce.withValues(alpha: c.isDark ? 0.36 : 0.28)
+                          : c.borderSubtle,
                       onTap: () => context.push('/log/${log.id}'),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Top row: Bean Name + Mode badge + ★ Rating + Delete
+                          // Top row: Mode Accent Bar + Bean Name + Mode/Method badge + ★ Rating + Delete
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Container(
+                                width: 4,
+                                height: 40,
+                                margin: const EdgeInsets.only(top: 2),
+                                decoration: BoxDecoration(
+                                  color: modeAccent,
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,13 +743,13 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                                     Text(
                                       log.beanName,
                                       style: PocketTheme.ui(
-                                        size: 14.5,
+                                        size: 15,
                                         weight: 800,
                                         height: 1.25,
                                         color: c.textPrimary,
                                       ),
                                     ),
-                                    const SizedBox(height: 3),
+                                    const SizedBox(height: 4),
                                     Wrap(
                                       spacing: 6,
                                       runSpacing: 4,
@@ -735,31 +759,47 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 7,
-                                            vertical: 2,
+                                            vertical: 3,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: isIced
-                                                ? c.tintIce
-                                                : c.tintTerracotta,
+                                            color: modeTint,
                                             borderRadius:
                                                 BorderRadius.circular(999),
                                           ),
-                                          child: Text(
-                                            log.mode.shortBadge,
-                                            style: PocketTheme.ui(
-                                              size: 10,
-                                              weight: 700,
-                                              color: isIced
-                                                  ? c.brandIce
-                                                  : c.brandTerracottaInk,
-                                            ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              PocketIcon(
+                                                isIced
+                                                    ? PocketIconType.snowflake
+                                                    : PocketIconType.flame,
+                                                size: 10.5,
+                                                color: modeInk,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  isIced
+                                                      ? 'Japanese Iced'
+                                                      : 'Hot V60',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: PocketTheme.ui(
+                                                    size: 10,
+                                                    weight: 800,
+                                                    color: modeInk,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                         Text(
                                           '${_formatDateShort(log.brewedAt)} · ${log.recipeName.split('·').last.trim()}',
                                           style: PocketTheme.ui(
-                                            size: 11,
-                                            weight: 500,
+                                            size: 11.2,
+                                            weight: 600,
                                             color: c.textTertiary,
                                           ),
                                         ),
@@ -846,13 +886,34 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 11),
 
-                          // Clean 4-column compact metrics strip
+                          // MODE-SPECIFIC COMPOSITION BLOCK!
+                          // Japanese Iced displays unmistakable Hot Water vs Ice Split Bar!
+                          if (isIced) ...[
+                            AnimatedWaterIceSplitBar(
+                              compact: true,
+                              hotWaterLabel:
+                                  BrewRecipeScaler.formatLiquidCompact(
+                                log.hotWaterG,
+                                unit,
+                              ),
+                              iceLabel: '${log.iceG.round()}g',
+                              hotFraction: hotFraction,
+                              methodBadge: log.icedMethod.shortLabel,
+                              totalLabel: BrewRecipeScaler.formatLiquidCompact(
+                                log.totalLiquidG,
+                                unit,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+
+                          // Clean parameter strip tailored to Hot vs Iced
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
-                              vertical: 7,
+                              vertical: 8,
                             ),
                             decoration: BoxDecoration(
                               color: c.isDark
@@ -862,23 +923,28 @@ class _BrewLogScreenState extends ConsumerState<BrewLogScreen> {
                             ),
                             child: Row(
                               children: [
-                                _MiniMetric('${log.clickSetting} klik'),
-                                _MiniMetric(
-                                  BrewRecipeScaler.formatTemp(
+                                _LabeledMiniMetric(
+                                  label: 'Dosis',
+                                  value: BrewRecipeScaler.formatDose(log.doseG),
+                                ),
+                                _LabeledMiniMetric(
+                                  label: 'Giling',
+                                  value: '${log.clickSetting} klik',
+                                ),
+                                _LabeledMiniMetric(
+                                  label: 'Suhu',
+                                  value: BrewRecipeScaler.formatTemp(
                                     log.tempC,
                                     state.prefs.tempUnit,
                                   ),
                                 ),
-                                _MiniMetric(
-                                  BrewRecipeScaler.formatShortDuration(
-                                    log.actualDrawdownSec,
-                                  ),
-                                ),
-                                _MiniMetric(
-                                  BrewRecipeScaler.formatLiquidCompact(
-                                    log.totalLiquidG,
-                                    unit,
-                                  ),
+                                _LabeledMiniMetric(
+                                  label: isIced ? 'Waktu' : 'Air · Waktu',
+                                  value: isIced
+                                      ? BrewRecipeScaler.formatShortDuration(
+                                          log.actualDrawdownSec,
+                                        )
+                                      : '${BrewRecipeScaler.formatLiquidCompact(log.totalLiquidG, unit)} · ${BrewRecipeScaler.formatShortDuration(log.actualDrawdownSec)}',
                                 ),
                               ],
                             ),
@@ -1016,24 +1082,48 @@ class _ActiveTag extends StatelessWidget {
   }
 }
 
-class _MiniMetric extends StatelessWidget {
-  const _MiniMetric(this.value);
+class _LabeledMiniMetric extends StatelessWidget {
+  const _LabeledMiniMetric({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Expanded(
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          value,
-          maxLines: 1,
-          textAlign: TextAlign.center,
-          style: PocketTheme.mono(
-            size: 11.5,
-            weight: FontWeight.w700,
-            color: context.colors.textPrimary,
-          ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Column(
+          children: [
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: PocketTheme.ui(
+                size: 9.5,
+                weight: 600,
+                color: c.textTertiary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                style: PocketTheme.mono(
+                  size: 11.5,
+                  weight: FontWeight.w800,
+                  color: c.textPrimary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

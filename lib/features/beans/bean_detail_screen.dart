@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
+import '../../core/widgets/canvas/coffee_atmosphere.dart';
 import '../../core/widgets/pocket_card.dart';
 import '../../core/widgets/pocket_confirm_dialog.dart';
 import '../../core/widgets/pocket_icons.dart';
@@ -61,8 +62,8 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
       context,
       title: 'Hapus Biji Kopi?',
       message:
-          'Biji "$beanName" akan dihapus permanen dari daftar stokmu. Catatan riwayat seduhan sebelumnya tetap aman.',
-      confirmLabel: 'Hapus Biji',
+          'Biji kopi "$beanName" akan dihapus permanen dari daftar stokmu. Catatan riwayat seduhan sebelumnya tetap aman.',
+      confirmLabel: 'Hapus Kopi',
     );
     if (!ok) return;
     ref.read(pocketStoreProvider.notifier).deleteBean(beanId);
@@ -90,9 +91,9 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              PocketTopBar(title: 'Detail Biji', onBack: () => context.pop()),
+              PocketTopBar(title: 'Detail Kopi', onBack: () => context.pop()),
               const Expanded(
-                child: Center(child: Text('Biji tidak ditemukan.')),
+                child: Center(child: Text('Biji kopi tidak ditemukan.')),
               ),
             ],
           ),
@@ -120,13 +121,15 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
     final statusLabel = bean.isFrozen ? 'Stok Cadangan' : 'Aktif Dipakai';
     final statusBg = bean.isFrozen ? c.tintIce : c.tintSage;
     final statusFg = bean.isFrozen ? c.brandIce : c.brandSage;
+    final roastAgeDays =
+        DateTime.now().difference(bean.roastDate).inDays.clamp(0, 999);
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             PocketTopBar(
-              title: 'Detail Biji',
+              title: 'Detail Kopi',
               onBack: () => context.pop(),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -280,31 +283,22 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
                                 sub: 'dosis 15g',
                               ),
                               _BeanKpi(
-                                label: 'Klik Andalan',
-                                value: bean.preferredHotClick != null
-                                    ? '${bean.preferredHotClick} klik'
-                                    : 'Belum',
-                                sub: bean.preferredIcedClick != null
-                                    ? 'Es: ${bean.preferredIcedClick}'
-                                    : 'Hot V60',
-                                highlight: bean.preferredHotClick != null
-                                    ? c.brandTerracottaInk
-                                    : null,
+                                label: 'Umur Sangrai',
+                                value: '$roastAgeDays hari',
+                                sub: bean.roastLevel.shortLabel,
+                                highlight: c.brandTerracottaInk,
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 10),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(99),
-                          child: LinearProgressIndicator(
-                            value: info.stockFraction,
-                            minHeight: 7,
-                            backgroundColor: c.surfaceElevated,
-                            color: info.isLastCupAlert
-                                ? c.brandHoney
-                                : c.brandSage,
-                          ),
+                        AnimatedCoffeeStockBar(
+                          fraction: info.stockFraction,
+                          height: 7,
+                          trackColor: c.surfaceElevated,
+                          fillColor: info.isLastCupAlert
+                              ? c.brandHoney
+                              : c.brandSage,
                         ),
 
                         if (bean.tastingNotes.isNotEmpty) ...[
@@ -660,7 +654,7 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
                         ),
                         const SizedBox(height: 10),
                         PocketButton(
-                          label: 'Brew Biji Ini',
+                          label: 'Seduh Kopi Ini',
                           pocketIcon: PocketIconType.v60,
                           iconSize: 16,
                           height: 46,
@@ -705,7 +699,7 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: PocketButton(
-                                label: 'Hapus Biji',
+                                label: 'Hapus Kopi',
                                 icon: Icons.delete_outline_rounded,
                                 iconSize: 15,
                                 height: 44,
@@ -739,7 +733,7 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Riwayat Biji Ini (${beanLogs.length} seduhan)',
+                                'Riwayat Kopi Ini (${beanLogs.length} seduhan)',
                                 style: PocketTheme.ui(
                                   size: 13,
                                   weight: 800,
@@ -761,7 +755,7 @@ class _BeanDetailScreenState extends ConsumerState<BeanDetailScreen> {
                         if (beanLogs.isEmpty) ...[
                           const SizedBox(height: 6),
                           Text(
-                            'Belum ada catatan seduhan untuk biji ini.',
+                            'Belum ada catatan seduhan untuk kopi ini.',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ] else ...[

@@ -11,10 +11,11 @@ import '../../core/widgets/pocket_icons.dart';
 import '../../data/repositories/pocket_store.dart';
 import '../../domain/models/models.dart';
 
-/// Screen 16 · Alat Seduh (Complete Redesign):
-/// - Clean Setup Aktif Saya hero card (Grinder, Dripper, Filter — vector icons only, no distracting photos)
-/// - Explicit "Simpan Setup Aktif" confirmation button inside Setup Aktif Saya
-/// - Scalable 3-tab Koleksi Alat (`Grinder` | `Dripper` | `Filter`) where built-in & custom items can be deleted (min 1 kept).
+/// Screen 16 · Alat Seduh (Sticky Workbench Redesign — Zero Confusion):
+/// - Pinned compact "Setup Aktif Saya" 3-slot strip (Grinder | Dripper | Filter)
+///   that ALWAYS stays visible at the top while scrolling the collection below.
+/// - Auto-saves immediately on tap (ZERO confusing "Simpan Setup Aktif" button/checklist!).
+/// - Tapping any top slot switches category smoothly & scrolls the collection to top.
 class GearScreen extends ConsumerStatefulWidget {
   const GearScreen({super.key});
 
@@ -27,14 +28,15 @@ class _GearScreenState extends ConsumerState<GearScreen> {
 
   int _categoryTab = 0; // 0 = Grinder, 1 = Dripper, 2 = Filter
   bool _onlyCustom = false;
-  bool _hasSetupChanges = false;
   String _query = '';
   int _visibleCount = _pageSize;
   final _searchCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -58,6 +60,24 @@ class _GearScreenState extends ConsumerState<GearScreen> {
       _onlyCustom = false;
       _visibleCount = _pageSize;
     });
+    if (_scrollCtrl.hasClients && _scrollCtrl.offset > 0) {
+      _scrollCtrl.animateTo(
+        0,
+        duration: PocketCurves.normal,
+        curve: PocketCurves.smoothOut,
+      );
+    }
+  }
+
+  void _showActivatedToast(String category, String name) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(milliseconds: 1700),
+        content: Text('$category aktif: $name ✓'),
+      ),
+    );
   }
 
   Future<void> _confirmDelete({
@@ -81,6 +101,17 @@ class _GearScreenState extends ConsumerState<GearScreen> {
     }
   }
 
+  String _shortGearLabel(String full) {
+    final clean = full.trim();
+    if (clean.length <= 18) return clean;
+    final words = clean.split(' ');
+    if (words.length >= 2) {
+      final candidate = '${words[0]} ${words[1]}';
+      return candidate.length <= 20 ? candidate : words[0];
+    }
+    return clean;
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -101,297 +132,289 @@ class _GearScreenState extends ConsumerState<GearScreen> {
       2 => customFilterCount,
       _ => customGrinderCount,
     };
+    final activeCatTotalCount = switch (_categoryTab) {
+      1 => state.drippers.length,
+      2 => state.filters.length,
+      _ => state.grinders.length,
+    };
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 108),
+        child: Column(
           children: [
-            // Top Header
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Alat Seduh',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+            // PINNED TOP WORKBENCH HEADER (Always visible — never lost on scroll!)
+            Container(
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+              decoration: BoxDecoration(
+                color: c.surfaceCanvas,
+                border: Border(
+                  bottom: BorderSide(color: c.borderSubtle, width: 1),
                 ),
-                const SizedBox(width: 8),
-                PocketPill(
-                  label: 'Tambah',
-                  pocketIcon: PocketIconType.plus,
-                  iconSize: 14,
-                  height: 36,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  backgroundColor: c.tintTerracotta,
-                  foregroundColor: c.brandTerracottaInk,
-                  onTap: () =>
-                      context.push('/gear/add-custom?type=$_categoryQueryParam'),
-                ),
-                const SizedBox(width: 7),
-                PocketTapScale(
-                  onTap: () => context.push('/settings'),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: c.surfaceCard,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: c.borderSubtle),
-                    ),
-                    alignment: Alignment.center,
-                    child: PocketIcon(
-                      PocketIconType.sliders,
-                      size: 17,
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            // 1. HERO CARD: Setup Aktif Saya (Clean single active setup — NO confusing Meja Rumah/Kantor/Travel!)
-            PocketCard(
-              padding: const EdgeInsets.all(15),
-              radius: 22,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 1. Title Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Alat Seduh',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      PocketPill(
+                        label: 'Tambah',
+                        pocketIcon: PocketIconType.plus,
+                        iconSize: 14,
+                        height: 36,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        backgroundColor: c.tintTerracotta,
+                        foregroundColor: c.brandTerracottaInk,
+                        onTap: () => context
+                            .push('/gear/add-custom?type=$_categoryQueryParam'),
+                      ),
+                      const SizedBox(width: 7),
+                      PocketTapScale(
+                        onTap: () => context.push('/settings'),
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: c.surfaceCard,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: c.borderSubtle),
+                          ),
+                          alignment: Alignment.center,
+                          child: PocketIcon(
+                            PocketIconType.sliders,
+                            size: 17,
+                            color: c.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 11),
+
+                  // 2. Compact Label + Auto-Save Status Pill
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
                           'Setup Aktif Saya',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: PocketTheme.ui(
-                            size: 13.5,
+                            size: 12.2,
                             weight: 800,
-                            color: c.textPrimary,
+                            color: c.textSecondary,
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      PocketPill(
-                        label: 'Dipakai saat Brew',
-                        height: 22,
-                        fontSize: 10,
-                        backgroundColor: c.tintSage,
-                        foregroundColor: c.brandSage,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: c.brandSage,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Otomatis tersimpan',
+                            style: PocketTheme.ui(
+                              size: 11,
+                              weight: 700,
+                              color: c.brandSage,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 11),
-                  _ActiveSetupSlot(
-                    label: 'Grinder',
-                    title: activeGrinder.fullName,
-                    spec:
-                        '${activeGrinder.umPerClick.round()} μm/klik · V60: ${activeGrinder.v60HotMin}–${activeGrinder.v60HotMax} klik',
-                    isCustom: !activeGrinder.isOfficial,
-                    highlighted: _categoryTab == 0,
-                    leading: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: c.tintTerracotta,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.center,
-                      child: PocketIcon(
-                        PocketIconType.burrGear,
-                        size: 20,
-                        color: c.brandTerracottaInk,
-                      ),
-                    ),
-                    onTap: () => _selectCategory(0),
-                  ),
                   const SizedBox(height: 8),
-                  _ActiveSetupSlot(
-                    label: 'Dripper',
-                    title: activeDripper.name,
-                    spec:
-                        '${activeDripper.geometry} · ${activeDripper.material}',
-                    isCustom: !activeDripper.isOfficial,
-                    highlighted: _categoryTab == 1,
-                    leading: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: c.surfaceElevated,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.center,
-                      child: PocketIcon(
-                        PocketIconType.v60,
-                        size: 20,
-                        color: c.textPrimary,
-                      ),
+
+                  // 3. Pinned 3-Slot Interactive Setup Selector (Acts as both live status & category tabs!)
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _PinnedGearSlot(
+                          category: 'Grinder',
+                          activeName: activeGrinder.model,
+                          count: state.grinders.length,
+                          icon: PocketIconType.burrGear,
+                          accent: c.brandTerracotta,
+                          accentInk: c.brandTerracottaInk,
+                          tint: c.tintTerracotta,
+                          selected: _categoryTab == 0,
+                          onTap: () => _selectCategory(0),
+                        ),
+                        const SizedBox(width: 8),
+                        _PinnedGearSlot(
+                          category: 'Dripper',
+                          activeName: _shortGearLabel(activeDripper.name),
+                          count: state.drippers.length,
+                          icon: PocketIconType.v60,
+                          accent: c.brandSage,
+                          accentInk: c.brandSage,
+                          tint: c.tintSage,
+                          selected: _categoryTab == 1,
+                          onTap: () => _selectCategory(1),
+                        ),
+                        const SizedBox(width: 8),
+                        _PinnedGearSlot(
+                          category: 'Filter',
+                          activeName: _shortGearLabel(activeFilter.name),
+                          count: state.filters.length,
+                          icon: PocketIconType.filterPaper,
+                          accent: c.brandIce,
+                          accentInk: c.brandIce,
+                          tint: c.tintIce,
+                          selected: _categoryTab == 2,
+                          onTap: () => _selectCategory(2),
+                        ),
+                      ],
                     ),
-                    onTap: () => _selectCategory(1),
                   ),
-                  const SizedBox(height: 8),
-                  _ActiveSetupSlot(
-                    label: 'Kertas Filter',
-                    title: activeFilter.name,
-                    spec:
-                        'Aliran ${activeFilter.speed} · ${activeFilter.grindOffsetUm == 0 ? 'Standar' : '${activeFilter.grindOffsetUm > 0 ? '+' : ''}${activeFilter.grindOffsetUm.round()} μm'}',
-                    isCustom: !activeFilter.isOfficial,
-                    highlighted: _categoryTab == 2,
-                    leading: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: c.tintIce,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.center,
-                      child: PocketIcon(
-                        PocketIconType.filterPaper,
-                        size: 20,
-                        color: c.brandIce,
-                      ),
-                    ),
-                    onTap: () => _selectCategory(2),
-                  ),
-                  const SizedBox(height: 12),
-                  PocketButton(
-                    label: _hasSetupChanges
-                        ? 'Simpan Setup Aktif'
-                        : 'Simpan Setup Aktif ✓',
-                    pocketIcon: PocketIconType.check,
-                    iconSize: 16,
-                    height: 44,
-                    fontSize: 12.8,
-                    backgroundColor:
-                        _hasSetupChanges ? c.brandTerracotta : c.brandEspresso,
-                    foregroundColor: c.textOnAccent,
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      setState(() => _hasSetupChanges = false);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Setup aktif disimpan: ${activeGrinder.model} · ${activeDripper.name} · ${activeFilter.name} ✓',
+                  const SizedBox(height: 10),
+
+                  // 4. Compact Search + optional "Alat Saya" filter
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _searchCtrl,
+                          onChanged: (v) => setState(() {
+                            _query = v;
+                            _visibleCount = _pageSize;
+                          }),
+                          style: PocketTheme.ui(
+                            size: 13,
+                            weight: 500,
+                            color: c.textPrimary,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: c.surfaceCard,
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              size: 18,
+                              color: c.textTertiary,
+                            ),
+                            suffixIcon: _query.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(
+                                      Icons.close_rounded,
+                                      size: 17,
+                                      color: c.textTertiary,
+                                    ),
+                                    onPressed: () {
+                                      _searchCtrl.clear();
+                                      setState(() {
+                                        _query = '';
+                                        _visibleCount = _pageSize;
+                                      });
+                                    },
+                                  )
+                                : null,
+                            hintText: 'Cari $_categoryLabel...',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 10,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(13),
+                              borderSide: BorderSide(color: c.borderSubtle),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(13),
+                              borderSide: BorderSide(
+                                color: c.brandTerracotta,
+                                width: 1.4,
+                              ),
+                            ),
                           ),
                         ),
-                      );
-                    },
+                      ),
+                      if (activeCatCustomCount > 0) ...[
+                        const SizedBox(width: 8),
+                        PocketPill(
+                          label: _onlyCustom
+                              ? 'Alat Saya ($activeCatCustomCount) ✓'
+                              : 'Alat Saya ($activeCatCustomCount)',
+                          height: 40,
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          padding: const EdgeInsets.symmetric(horizontal: 11),
+                          backgroundColor:
+                              _onlyCustom ? c.brandSage : c.surfaceCard,
+                          foregroundColor:
+                              _onlyCustom ? c.textOnAccent : c.textSecondary,
+                          borderColor:
+                              _onlyCustom ? Colors.transparent : c.borderSubtle,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() {
+                              _onlyCustom = !_onlyCustom;
+                              _visibleCount = _pageSize;
+                            });
+                          },
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
 
-            // 2. KOLEKSI ALAT (Natural merged official + personal gear browser!)
-            PocketSectionHeader(
-              title: 'Koleksi Alat Seduh',
-              actionLabel: '+ Tambah $_categoryLabel Sendiri',
-              onAction: () =>
-                  context.push('/gear/add-custom?type=$_categoryQueryParam'),
-            ),
-            const SizedBox(height: 9),
-
-            // Smooth Sliding 3-Tab Category Selector
-            _GearCategoryTabs(
-              selected: _categoryTab,
-              grinderCount: state.grinders.length,
-              dripperCount: state.drippers.length,
-              filterCount: state.filters.length,
-              onSelect: _selectCategory,
-            ),
-            const SizedBox(height: 10),
-
-            // Search + optional "Alat Saya" quick filter when user has added own tools
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    onChanged: (v) => setState(() {
-                      _query = v;
-                      _visibleCount = _pageSize;
-                    }),
+            // SCROLLABLE COLLECTION LIST BELOW PINNED WORKBENCH
+            Expanded(
+              child: ListView(
+                controller: _scrollCtrl,
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 112),
+                children: [
+                  PocketSectionHeader(
+                    title: 'Koleksi Alat Seduh',
+                    actionLabel: '$_categoryLabel ($activeCatTotalCount)',
+                    onAction: () => context
+                        .push('/gear/add-custom?type=$_categoryQueryParam'),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Ketuk salah satu $_categoryLabel di bawah untuk langsung memakainya.',
                     style: PocketTheme.ui(
-                      size: 13,
+                      size: 11.8,
                       weight: 500,
-                      color: c.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        size: 18,
-                        color: c.textTertiary,
-                      ),
-                      suffixIcon: _query.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.close_rounded,
-                                size: 17,
-                                color: c.textTertiary,
-                              ),
-                              onPressed: () {
-                                _searchCtrl.clear();
-                                setState(() {
-                                  _query = '';
-                                  _visibleCount = _pageSize;
-                                });
-                              },
-                            )
-                          : null,
-                      hintText: 'Cari $_categoryLabel...',
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
-                      ),
+                      color: c.textTertiary,
                     ),
                   ),
-                ),
-                if (activeCatCustomCount > 0) ...[
-                  const SizedBox(width: 8),
-                  PocketPill(
-                    label: _onlyCustom
-                        ? 'Alat Saya ($activeCatCustomCount) ✓'
-                        : 'Alat Saya ($activeCatCustomCount)',
-                    height: 40,
-                    fontSize: 11.5,
-                    fontWeight: 700,
-                    padding: const EdgeInsets.symmetric(horizontal: 11),
-                    backgroundColor: _onlyCustom ? c.brandSage : c.surfaceCard,
-                    foregroundColor:
-                        _onlyCustom ? c.textOnAccent : c.textSecondary,
-                    borderColor:
-                        _onlyCustom ? Colors.transparent : c.borderSubtle,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() {
-                        _onlyCustom = !_onlyCustom;
-                        _visibleCount = _pageSize;
-                      });
-                    },
+                  const SizedBox(height: 10),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: PocketCurves.smoothOut,
+                    child: KeyedSubtree(
+                      key: ValueKey(
+                        'gear_list_${_categoryTab}_${_onlyCustom}_$_query',
+                      ),
+                      child: switch (_categoryTab) {
+                        0 => _buildGrinderList(c, state, notifier),
+                        1 => _buildDripperList(c, state, notifier),
+                        _ => _buildFilterList(c, state, notifier),
+                      },
+                    ),
                   ),
                 ],
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            // Animated Category List Body
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              switchInCurve: PocketCurves.smoothOut,
-              child: KeyedSubtree(
-                key: ValueKey('gear_list_${_categoryTab}_${_onlyCustom}_$_query'),
-                child: switch (_categoryTab) {
-                  0 => _buildGrinderList(c, state, notifier),
-                  1 => _buildDripperList(c, state, notifier),
-                  _ => _buildFilterList(c, state, notifier),
-                },
               ),
             ),
           ],
@@ -406,7 +429,6 @@ class _GearScreenState extends ConsumerState<GearScreen> {
     PocketStoreNotifier notifier,
   ) {
     final q = _query.trim().toLowerCase();
-    // Put Custom grinders first so user immediately sees their custom gear!
     final sorted = [
       ...state.grinders.where((g) => !g.isOfficial),
       ...state.grinders.where((g) => g.isOfficial),
@@ -431,13 +453,14 @@ class _GearScreenState extends ConsumerState<GearScreen> {
               '${g.umPerClick.round()} μm/klik · V60: ${g.v60HotMin}–${g.v60HotMax} klik',
           note: g.zeroPointNote,
           active: active,
+          accentColor: c.brandTerracotta,
+          accentInk: c.brandTerracottaInk,
+          accentTint: c.tintTerracotta,
           isCustom: !g.isOfficial,
           onTap: () {
             HapticFeedback.selectionClick();
-            if (!active) {
-              setState(() => _hasSetupChanges = true);
-            }
             notifier.setActiveGrinder(g.id);
+            if (!active) _showActivatedToast('Grinder', g.model);
           },
           onEdit: g.isOfficial
               ? null
@@ -484,13 +507,14 @@ class _GearScreenState extends ConsumerState<GearScreen> {
           subtitle: '${d.geometry} · ${d.material} · ${d.capacityG}',
           note: d.flowNote,
           active: active,
+          accentColor: c.brandSage,
+          accentInk: c.brandSage,
+          accentTint: c.tintSage,
           isCustom: !d.isOfficial,
           onTap: () {
             HapticFeedback.selectionClick();
-            if (!active) {
-              setState(() => _hasSetupChanges = true);
-            }
             notifier.setActiveDripper(d.id);
+            if (!active) _showActivatedToast('Dripper', d.name);
           },
           onEdit: d.isOfficial
               ? null
@@ -538,13 +562,14 @@ class _GearScreenState extends ConsumerState<GearScreen> {
               'Aliran ${f.speed} · ${f.grindOffsetUm == 0 ? 'Standar' : '${f.grindOffsetUm > 0 ? '+' : ''}${f.grindOffsetUm.round()} μm'}',
           note: f.note,
           active: active,
+          accentColor: c.brandIce,
+          accentInk: c.brandIce,
+          accentTint: c.tintIce,
           isCustom: !f.isOfficial,
           onTap: () {
             HapticFeedback.selectionClick();
-            if (!active) {
-              setState(() => _hasSetupChanges = true);
-            }
             notifier.setActiveFilter(f.id);
+            if (!active) _showActivatedToast('Filter', f.name);
           },
           onEdit: f.isOfficial
               ? null
@@ -653,213 +678,124 @@ class _GearScreenState extends ConsumerState<GearScreen> {
   }
 }
 
-class _ActiveSetupSlot extends StatelessWidget {
-  const _ActiveSetupSlot({
-    required this.label,
-    required this.title,
-    required this.spec,
-    required this.leading,
-    required this.isCustom,
-    required this.highlighted,
+/// Interactive pinned top slot showing live active tool + category selector.
+class _PinnedGearSlot extends StatelessWidget {
+  const _PinnedGearSlot({
+    required this.category,
+    required this.activeName,
+    required this.count,
+    required this.icon,
+    required this.accent,
+    required this.accentInk,
+    required this.tint,
+    required this.selected,
     required this.onTap,
   });
 
-  final String label;
-  final String title;
-  final String spec;
-  final Widget leading;
-  final bool isCustom;
-  final bool highlighted;
+  final String category;
+  final String activeName;
+  final int count;
+  final PocketIconType icon;
+  final Color accent;
+  final Color accentInk;
+  final Color tint;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return PocketTapScale(
-      onTap: onTap,
-      pressedScale: 0.985,
-      child: AnimatedContainer(
-        duration: PocketCurves.fast,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: highlighted
-              ? (c.isDark ? c.surfaceElevated : c.surfaceCanvas)
-              : (c.isDark ? c.surfaceCanvas : c.surfaceElevated),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: highlighted
-                ? c.brandTerracotta.withValues(alpha: 0.5)
-                : c.borderSubtle,
-            width: highlighted ? 1.3 : 1.0,
+    return Expanded(
+      child: PocketTapScale(
+        onTap: onTap,
+        pressedScale: 0.96,
+        child: AnimatedContainer(
+          duration: PocketCurves.fast,
+          curve: PocketCurves.smoothOut,
+          padding: const EdgeInsets.fromLTRB(9, 9, 9, 8),
+          decoration: BoxDecoration(
+            color: selected ? tint : c.surfaceCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected ? accent : c.borderSubtle,
+              width: selected ? 1.5 : 1.0,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            leading,
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        label,
-                        style: PocketTheme.ui(
-                          size: 10.5,
-                          weight: 700,
-                          color: c.textTertiary,
-                        ),
-                      ),
-                      if (isCustom) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: c.tintSage,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            'Alat Saya',
-                            style: PocketTheme.ui(
-                              size: 9,
-                              weight: 700,
-                              color: c.brandSage,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  Text(
-                    title,
-                    style: PocketTheme.ui(
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? accent
+                          : (c.isDark ? c.surfaceElevated : c.surfaceCanvas),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: PocketIcon(
+                      icon,
                       size: 13.5,
-                      weight: 800,
-                      height: 1.25,
-                      color: c.textPrimary,
+                      color: selected ? c.textOnAccent : accentInk,
                     ),
                   ),
+                  const Spacer(),
                   Text(
-                    spec,
+                    '$count',
                     style: PocketTheme.mono(
                       size: 10.5,
-                      weight: FontWeight.w500,
-                      height: 1.3,
-                      color: c.textSecondary,
+                      weight: FontWeight.w700,
+                      color: selected ? accentInk : c.textTertiary,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Ganti',
-              style: PocketTheme.ui(
-                size: 11.5,
-                weight: 700,
-                color: c.brandTerracottaInk,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GearCategoryTabs extends StatelessWidget {
-  const _GearCategoryTabs({
-    required this.selected,
-    required this.grinderCount,
-    required this.dripperCount,
-    required this.filterCount,
-    required this.onSelect,
-  });
-
-  final int selected;
-  final int grinderCount;
-  final int dripperCount;
-  final int filterCount;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final alignX = selected == 0 ? -1.0 : (selected == 1 ? 0.0 : 1.0);
-    final items = [
-      'Grinder ($grinderCount)',
-      'Dripper ($dripperCount)',
-      'Filter ($filterCount)',
-    ];
-
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: c.surfaceElevated,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: c.borderSubtle),
-      ),
-      child: Stack(
-        children: [
-          AnimatedAlign(
-            duration: const Duration(milliseconds: 240),
-            curve: PocketCurves.gentleSpring,
-            alignment: Alignment(alignX, 0),
-            child: FractionallySizedBox(
-              widthFactor: 1 / 3,
-              heightFactor: 1.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: c.surfaceCard,
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: c.isDark
-                      ? null
-                      : [
-                          BoxShadow(
-                            color:
-                                const Color(0xFF1F1915).withValues(alpha: 0.06),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+              const SizedBox(height: 6),
+              Text(
+                category,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: PocketTheme.ui(
+                  size: 10.5,
+                  weight: 700,
+                  color: selected ? accentInk : c.textTertiary,
                 ),
               ),
-            ),
-          ),
-          Row(
-            children: List.generate(items.length, (i) {
-              final act = i == selected;
-              return Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onSelect(i),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          items[i],
-                          maxLines: 1,
-                          style: PocketTheme.ui(
-                            size: 12,
-                            weight: act ? 700 : 600,
-                            color: act ? c.textPrimary : c.textSecondary,
-                          ),
-                        ),
-                      ),
+              const SizedBox(height: 2),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.2),
+                      end: Offset.zero,
+                    ).animate(anim),
+                    child: child,
+                  ),
+                ),
+                child: SizedBox(
+                  key: ValueKey(activeName),
+                  width: double.infinity,
+                  child: Text(
+                    activeName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: PocketTheme.ui(
+                      size: 11.8,
+                      weight: 800,
+                      height: 1.2,
+                      color: c.textPrimary,
                     ),
                   ),
                 ),
-              );
-            }),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -871,6 +807,9 @@ class _GearCollectionCard extends StatelessWidget {
     required this.subtitle,
     required this.note,
     required this.active,
+    required this.accentColor,
+    required this.accentInk,
+    required this.accentTint,
     required this.isCustom,
     required this.onTap,
     this.onEdit,
@@ -881,6 +820,9 @@ class _GearCollectionCard extends StatelessWidget {
   final String subtitle;
   final String note;
   final bool active;
+  final Color accentColor;
+  final Color accentInk;
+  final Color accentTint;
   final bool isCustom;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
@@ -890,135 +832,164 @@ class _GearCollectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return PocketCard(
-      backgroundColor: active ? c.tintTerracotta : c.surfaceCard,
-      borderColor: active ? c.brandTerracotta : c.borderSubtle,
-      borderWidth: active ? 1.4 : 1.0,
+      backgroundColor: active ? accentTint : c.surfaceCard,
+      borderColor: active ? accentColor : c.borderSubtle,
+      borderWidth: active ? 1.45 : 1.0,
       elevated: false,
-      radius: 17,
-      padding: const EdgeInsets.all(12),
+      radius: 18,
+      padding: const EdgeInsets.all(13),
       onTap: onTap,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: PocketTheme.ui(
-                          size: 13.5,
-                          weight: 800,
-                          height: 1.25,
-                          color:
-                              active ? c.brandTerracottaInk : c.textPrimary,
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          style: PocketTheme.ui(
+                            size: 14,
+                            weight: 800,
+                            height: 1.25,
+                            color: active ? accentInk : c.textPrimary,
+                          ),
                         ),
+                        if (isCustom)
+                          PocketPill(
+                            label: 'Alat Saya',
+                            height: 21,
+                            fontSize: 9.8,
+                            padding: const EdgeInsets.symmetric(horizontal: 7),
+                            backgroundColor: c.tintSage,
+                            foregroundColor: c.brandSage,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: PocketTheme.mono(
+                        size: 11,
+                        weight: FontWeight.w600,
+                        height: 1.3,
+                        color: c.textSecondary,
                       ),
                     ),
-                    if (isCustom) ...[
-                      const SizedBox(width: 6),
-                      PocketPill(
-                        label: 'Alat Saya',
-                        height: 20,
-                        fontSize: 9.5,
-                        padding: const EdgeInsets.symmetric(horizontal: 7),
-                        backgroundColor: c.tintSage,
-                        foregroundColor: c.brandSage,
-                      ),
-                    ],
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: PocketTheme.mono(
-                    size: 10.8,
-                    weight: FontWeight.w600,
-                    height: 1.3,
-                    color: c.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              if (active)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Dipakai',
+                    style: PocketTheme.ui(
+                      size: 10.8,
+                      weight: 800,
+                      color: c.textOnAccent,
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: c.surfaceElevated,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Pakai',
+                    style: PocketTheme.ui(
+                      size: 10.8,
+                      weight: 700,
+                      color: c.textSecondary,
+                    ),
                   ),
                 ),
-                if (note.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    note,
-                    style: PocketTheme.ui(
-                      size: 11,
-                      weight: 500,
-                      height: 1.3,
-                      color: c.textTertiary,
+            ],
+          ),
+          if (note.isNotEmpty || onEdit != null || onDelete != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: note.isNotEmpty
+                      ? Text(
+                          note,
+                          style: PocketTheme.ui(
+                            size: 11.4,
+                            weight: 500,
+                            height: 1.35,
+                            color: c.textTertiary,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                if (onEdit != null) ...[
+                  const SizedBox(width: 8),
+                  PocketTapScale(
+                    onTap: onEdit,
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: c.surfaceCard,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: c.borderSubtle),
+                      ),
+                      alignment: Alignment.center,
+                      child: PocketIcon(
+                        PocketIconType.edit,
+                        size: 14,
+                        color: c.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+                if (onDelete != null) ...[
+                  const SizedBox(width: 6),
+                  PocketTapScale(
+                    onTap: onDelete,
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: c.statusError.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.delete_outline_rounded,
+                        size: 15,
+                        color: c.statusError,
+                      ),
                     ),
                   ),
                 ],
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          if (onEdit != null || onDelete != null) ...[
-            if (onEdit != null)
-              PocketTapScale(
-                onTap: onEdit,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: c.surfaceElevated,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  alignment: Alignment.center,
-                  child: PocketIcon(
-                    PocketIconType.edit,
-                    size: 14,
-                    color: c.textPrimary,
-                  ),
-                ),
-              ),
-            if (onDelete != null) ...[
-              const SizedBox(width: 5),
-              PocketTapScale(
-                onTap: onDelete,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: c.statusError.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.delete_outline_rounded,
-                    size: 15,
-                    color: c.statusError,
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(width: 6),
           ],
-          AnimatedContainer(
-            duration: PocketCurves.fast,
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: active ? c.brandTerracotta : Colors.transparent,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: active ? c.brandTerracotta : c.borderStrong,
-                width: 1.5,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: active
-                ? PocketIcon(
-                    PocketIconType.check,
-                    size: 13,
-                    color: c.textOnAccent,
-                  )
-                : null,
-          ),
         ],
       ),
     );

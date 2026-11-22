@@ -704,7 +704,7 @@ class _EvaluationScreenState extends ConsumerState<EvaluationScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Kurangi stok biji (−${BrewRecipeScaler.formatDose(doseG)})',
+                              'Kurangi stok kopi (−${BrewRecipeScaler.formatDose(doseG)})',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: PocketTheme.ui(

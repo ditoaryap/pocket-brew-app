@@ -37,7 +37,7 @@ class PocketFloatingDock extends StatelessWidget {
       accentColor: (c) => c.brandEspresso,
     ),
     PocketDockItem(
-      label: 'Beans',
+      label: 'Kopi',
       icon: PocketIconType.bean,
       accentColor: (c) => c.brandEspresso,
     ),

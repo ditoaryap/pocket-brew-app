@@ -12,6 +12,7 @@ import 'package:pocket_brew/data/repositories/pocket_store.dart';
 import 'package:pocket_brew/domain/models/enums.dart';
 import 'package:pocket_brew/domain/models/models.dart';
 import 'package:pocket_brew/features/beans/add_bean_screen.dart';
+import 'package:pocket_brew/features/beans/bean_library_screen.dart';
 import 'package:pocket_brew/features/brew_log/brew_log_screen.dart';
 import 'package:pocket_brew/features/home/home_screen.dart';
 import 'package:pocket_brew/features/methods/methods_screen.dart';
@@ -210,7 +211,7 @@ void main() {
     expect(find.text('21 klik'), findsOneWidget);
     expect(find.text('94°C'), findsOneWidget);
     expect(find.text('250 ml'), findsOneWidget);
-    expect(find.text('Stok Biji di Rumah'), findsOneWidget);
+    expect(find.text('Stok Kopi di Rumah'), findsOneWidget);
     expect(find.text('6 resep pro · 0 buatanmu'), findsOneWidget);
     expect(find.text('Belajar Seduh'), findsOneWidget);
 
@@ -224,8 +225,8 @@ void main() {
     await tester.tap(find.text('Hoffmann 1-Cup'));
     await tester.pumpAndSettle();
 
-    // 1. Ganti biji -> Bean Picker MUST NOT have "Tanpa Biji" option
-    await tester.tap(find.text('Ganti biji'));
+    // 1. Ganti kopi -> Bean Picker MUST NOT have "Tanpa Biji" option
+    await tester.tap(find.text('Ganti kopi'));
     await tester.pumpAndSettle();
     expect(find.text('Pilih Biji Kopi'), findsOneWidget);
     expect(find.textContaining('Tanpa Biji'), findsNothing);
@@ -238,7 +239,7 @@ void main() {
     expect(find.text('Kenya Nyeri AA'), findsWidgets);
 
     // Switch back to Ethiopia Guji Uraga
-    await tester.tap(find.text('Ganti biji'));
+    await tester.tap(find.text('Ganti kopi'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ethiopia Guji Uraga').last);
     await tester.pumpAndSettle();
@@ -565,7 +566,7 @@ void main() {
       expect(find.text('Siap-siap Seduh'), findsOneWidget);
       expect(find.text('Lewati'), findsOneWidget);
       expect(find.textContaining('Panaskan air ke'), findsOneWidget);
-      expect(find.textContaining('Timbang biji'), findsOneWidget);
+      expect(find.textContaining('Timbang kopi'), findsOneWidget);
       expect(find.textContaining('Giling di 21 klik'), findsOneWidget);
       // Check off step 1 -> button reflects progress
       await tester.tap(find.textContaining('Panaskan air ke'));
@@ -714,15 +715,15 @@ void main() {
   );
 
   testWidgets(
-    'Settings Save CTA, Add/Detail Bean overhaul, BrewLog filters, Edit Tahapan preset & Belajar Seduh 8 topics',
+    'Settings Save CTA, Add/Detail Kopi overhaul, BrewLog Hot/Iced split, Gear sticky setup & Belajar Seduh 9 topics',
     (tester) async {
       final env = await pumpApp(tester);
       final router = env.router;
 
-      // 1. Settings screen has explicit Simpan CTA, Tes Suara, Hapus Data & Default Masa Paling Enak Biji copy
+      // 1. Settings screen has explicit Simpan CTA, Tes Suara, Hapus Data & Default Masa Paling Enak Kopi
       router.push('/settings');
       await tester.pumpAndSettle();
-      expect(find.text('Default Masa Paling Enak Biji'), findsOneWidget);
+      expect(find.text('Default Masa Paling Enak Kopi'), findsOneWidget);
       expect(find.text('Tes Suara'), findsOneWidget);
       expect(find.text('Simpan & Kembali'), findsOneWidget);
       final settingsScroll = find.byType(Scrollable).first;
@@ -763,11 +764,11 @@ void main() {
           )
           .first;
       await tester.scrollUntilVisible(
-        find.text('Berat Biji Saat Ini'),
+        find.text('Berat Kopi Saat Ini'),
         220,
         scrollable: addBeanScroll,
       );
-      expect(find.text('Berat Biji Saat Ini'), findsOneWidget);
+      expect(find.text('Berat Kopi Saat Ini'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Atur Sendiri'),
         220,
@@ -795,10 +796,13 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
 
-      // 3. Bean Detail has flexible stock input, Edit, Brew Biji Ini, Simpan Cadangan, Hapus Biji & NO Archive!
+      // 3. Detail Kopi: flexible stock input, Umur Sangrai (NO Klik Andalan!), Seduh Kopi Ini, Hapus Kopi & NO Archive!
       router.push('/beans/bean-ethiopia-guji');
       await tester.pumpAndSettle();
+      expect(find.text('Detail Kopi'), findsOneWidget);
       expect(find.text('Edit'), findsOneWidget);
+      expect(find.text('Umur Sangrai'), findsOneWidget);
+      expect(find.text('Klik Andalan'), findsNothing);
       expect(find.text('Koreksi Sisa Stok Aktual'), findsOneWidget);
       expect(find.text('Arsipkan Biji'), findsNothing);
       expect(find.textContaining('Arsip'), findsNothing);
@@ -808,17 +812,17 @@ void main() {
       expect(find.text('Simpan Koreksi Stok (142.5g)'), findsOneWidget);
       final beanDetailScroll = find.byType(Scrollable).first;
       await tester.scrollUntilVisible(
-        find.text('Hapus Biji'),
+        find.text('Hapus Kopi'),
         220,
         scrollable: beanDetailScroll,
       );
       await tester.drag(beanDetailScroll, const Offset(0, -200));
       await tester.pumpAndSettle();
-      expect(find.text('Brew Biji Ini'), findsOneWidget);
+      expect(find.text('Seduh Kopi Ini'), findsOneWidget);
       expect(find.text('Simpan Cadangan'), findsOneWidget);
-      expect(find.text('Hapus Biji'), findsOneWidget);
-      // Tapping Hapus Biji opens confirmation dialog!
-      await tester.tap(find.text('Hapus Biji'));
+      expect(find.text('Hapus Kopi'), findsOneWidget);
+      // Tapping Hapus Kopi opens confirmation dialog!
+      await tester.tap(find.text('Hapus Kopi'));
       await tester.pumpAndSettle();
       expect(find.text('Hapus Biji Kopi?'), findsOneWidget);
       await tester.tap(find.text('Batal'));
@@ -826,12 +830,33 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
 
-      // 4. Belajar Seduh has all 8 structured topics (including Roda Rasa Kopi + 5-pattern Pour Guide)
+      // 4. Belajar Seduh has all 9 pro-standard topics (including Ensiklopedia Biji Kopi, Japanese Iced, Grinder & Roda Rasa!)
       router.push('/learn');
       await tester.pumpAndSettle();
-      expect(find.text('8 Materi'), findsOneWidget);
-      expect(find.text('Dasar Seduh: Rasio, Gilingan & Suhu'), findsOneWidget);
-      expect(find.text('Perbaiki Rasa: Asam vs Pahit'), findsOneWidget);
+      expect(find.text('9 Materi'), findsOneWidget);
+      expect(find.text('Ensiklopedia Biji Kopi (Wajib Baca)'), findsOneWidget);
+      expect(find.text('Ilmu Ekstraksi & Rasio Emas (SCA)'), findsOneWidget);
+      // Open Ensiklopedia Biji Kopi (/learn/beans) & verify interactive Roast tabs + 5 Processes!
+      router.push('/learn/beans');
+      await tester.pumpAndSettle();
+      expect(find.text('Ensiklopedia Biji Kopi'), findsOneWidget);
+      expect(find.text('Light'), findsOneWidget);
+      expect(find.text('Medium'), findsOneWidget);
+      expect(find.text('Dark'), findsOneWidget);
+      await tester.tap(find.text('Dark'));
+      await tester.pumpAndSettle();
+      expect(find.text('84°C – 89°C'), findsOneWidget);
+      router.pop();
+      await tester.pumpAndSettle();
+      // Open Japanese Iced Pro (/learn/iced) & verify interactive 70/30 vs 60/40 simulator
+      router.push('/learn/iced');
+      await tester.pumpAndSettle();
+      expect(find.text('Japanese Iced Pro'), findsOneWidget);
+      await tester.tap(find.text('60/40 Segar'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Air Panas 150 ml (60%)'), findsOneWidget);
+      router.pop();
+      await tester.pumpAndSettle();
       // Open Roda Rasa Kopi (/learn/wheel) & verify 9 SCA categories + search
       router.push('/learn/wheel');
       await tester.pumpAndSettle();
@@ -861,13 +886,16 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
 
-      // 5. Brew Log has search + Bottom Sheet Filter button & NO separate Favorit cards
+      // 5. Brew Log differentiates Hot V60 vs Japanese Iced (with Air Panas + Es Split Bar!) & has Filter sheet
       router.go('/log');
       await tester.pumpAndSettle();
       expect(find.text('Riwayat Seduhan'), findsOneWidget);
       expect(find.text('Favorit Hot V60'), findsNothing);
       expect(find.text('Favorit Japanese'), findsNothing);
       expect(find.text('Filter'), findsOneWidget);
+      // Seeded Japanese Iced log displays clear Hot Water vs Ice Split Bar!
+      expect(find.textContaining('Air Panas'), findsWidgets);
+      expect(find.textContaining('Teknik:'), findsWidgets);
       // Open Bottom Sheet Filter -> pick Japanese Iced -> apply -> verify active count & Reset
       await tester.tap(find.text('Filter'));
       await tester.pumpAndSettle();
@@ -881,12 +909,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Filter'), findsOneWidget);
 
-      // 6. Alat Seduh removes Meja Rumah/Kantor/Travel & uses natural Alat Saya labels!
+      // 6. Alat Seduh: Pinned 3-slot Setup Aktif Saya, Otomatis tersimpan, ZERO Simpan Setup Aktif button!
       router.go('/gear');
       await tester.pumpAndSettle();
       expect(find.text('Alat Seduh'), findsOneWidget);
       expect(find.text('Setup Aktif Saya'), findsOneWidget);
+      expect(find.text('Otomatis tersimpan'), findsOneWidget);
       expect(find.text('Koleksi Alat Seduh'), findsOneWidget);
+      expect(find.text('Dipakai'), findsWidgets);
+      expect(find.textContaining('Simpan Setup Aktif'), findsNothing);
       expect(find.text('Meja Rumah'), findsNothing);
       expect(find.text('Kantor'), findsNothing);
       expect(find.text('Travel'), findsNothing);
@@ -1138,21 +1169,28 @@ void main() {
       router.pop();
       await tester.pumpAndSettle();
 
-      // Learn Hub + Basics + Wheel + Pour Dark @ 360dp
+      // Learn Hub + ALL 9 topics Dark @ 360dp
       router.push('/learn');
       await tester.pumpAndSettle();
-      expect(find.text('8 Materi'), findsOneWidget);
+      expect(find.text('9 Materi'), findsOneWidget);
       expect(tester.takeException(), isNull);
-      router.push('/learn/basics');
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      router.pop();
-      await tester.pumpAndSettle();
-      router.push('/learn/wheel');
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      router.pop();
-      await tester.pumpAndSettle();
+      for (final route in [
+        '/learn/beans',
+        '/learn/basics',
+        '/learn/troubleshoot',
+        '/learn/iced',
+        '/learn/water',
+        '/learn/dripper',
+        '/learn/grinder',
+        '/learn/wheel',
+      ]) {
+        router.push(route);
+        await tester.pumpAndSettle();
+        final err = tester.takeException();
+        expect(err, isNull, reason: 'Dark 360dp error on $route: $err');
+        router.pop();
+        await tester.pumpAndSettle();
+      }
       router.push('/learn/pour');
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 350));
@@ -1162,6 +1200,22 @@ void main() {
       await tester.pumpAndSettle();
       router.pop();
       await tester.pumpAndSettle();
+
+      // BrewLogDetail for Japanese Iced Dark @ 360dp
+      final icedLog = container
+          .read(pocketStoreProvider)
+          .logs
+          .where((l) => l.mode == BrewMode.iced)
+          .firstOrNull;
+      if (icedLog != null) {
+        router.push('/log/${icedLog.id}');
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Air Panas'), findsOneWidget);
+        expect(find.textContaining('Teknik:'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        router.pop();
+        await tester.pumpAndSettle();
+      }
 
       // 03 Methods Dark @ 360dp
       router.push('/methods');
@@ -1224,12 +1278,20 @@ void main() {
       expect(container.read(pocketStoreProvider).currentPlan.stages.length, 5);
       expect(find.text('Tahap diubah sesi ini'), findsNothing);
 
-      // 2. Bean Library has 2 tabs (Aktif & Cadangan), ZERO Arsip!
+      // 2. Koleksi Kopi has 2 tabs (Aktif & Cadangan), ZERO Arsip & ZERO grinder "klik" text!
       router.go('/beans');
       await tester.pumpAndSettle();
+      expect(find.text('Koleksi Kopi'), findsOneWidget);
       expect(find.textContaining('Aktif ('), findsOneWidget);
       expect(find.textContaining('Cadangan ('), findsOneWidget);
       expect(find.textContaining('Arsip'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(BeanLibraryScreen),
+          matching: find.textContaining('klik'),
+        ),
+        findsNothing,
+      );
       expect(tester.takeException(), isNull);
 
       // 3. Methods screen: delete an official recipe with confirmation modal

@@ -86,7 +86,7 @@ class _BeanPickerSheet extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 PocketPill(
-                  label: '+ Tambah Biji',
+                  label: '+ Tambah Kopi',
                   backgroundColor: c.tintTerracotta,
                   foregroundColor: c.brandTerracottaInk,
                   fontSize: 11.5,
@@ -113,7 +113,7 @@ class _BeanPickerSheet extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Belum ada stok biji aktif. Tambah biji pertamamu dulu ya!',
+                        'Belum ada stok kopi aktif. Tambah biji kopi pertamamu dulu ya!',
                         textAlign: TextAlign.center,
                         style: PocketTheme.ui(
                           size: 12.5,
@@ -243,7 +243,7 @@ class _BeanPickerSheet extends ConsumerWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  'Kelola Semua Stok Biji (${activeBeans.length}) →',
+                  'Kelola Semua Stok Kopi (${activeBeans.length}) →',
                   style: PocketTheme.ui(
                     size: 12.5,
                     weight: 600,

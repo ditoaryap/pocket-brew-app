@@ -6,6 +6,7 @@ import '../../app/theme/pocket_theme.dart';
 import '../../app/theme/pocket_tokens.dart';
 import '../../core/motion/pocket_motion.dart';
 import '../../core/widgets/bean_picker_sheet.dart';
+import '../../core/widgets/canvas/coffee_atmosphere.dart';
 import '../../core/widgets/pocket_card.dart';
 import '../../core/widgets/pocket_icons.dart';
 import '../../core/widgets/pocket_logo.dart';
@@ -15,14 +16,11 @@ import '../../domain/engines/brew_recipe_scaler.dart';
 import '../../domain/models/enums.dart';
 import '../../domain/models/models.dart';
 
-/// Screen 02 · Beranda (Warm Editorial Redesign & Fast Brew Launchpad):
-/// - Soft, airy, non-stiff editorial header + tappable active gear pill (no Meja Rumah/Kantor/Travel)
-/// - Unified Quick-Brew Shortcut Card:
-///   1) Sliding Hot V60 <-> Japanese Iced switcher
-///   2) Active Bean selector with plain-language freshness badge
-///   3) Inline horizontal Quick Method / Recipe selector strip
-///   4) Live 4-KPI brew preview + direct "Seduh Sekarang" & "Edit Tahapan Seduh" CTAs
-/// - Clean Stock cards, Exploration tiles, and Latest Brew recap.
+/// Screen 02 · Beranda (Cohesive Editorial Flow + Living Coffee/Ice Atmosphere):
+/// - Seamless canvas header (no boxy header card) linked directly into the hero Launchpad.
+/// - Living BrewAtmosphereBackdrop morphs smoothly between rising Hot V60 aroma wisps
+///   and drifting Japanese Iced crystal facets.
+/// - Consistent "Kopi / Biji Kopi" terminology & unified visual rhythm down to the bottom cards.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -78,7 +76,6 @@ class HomeScreen extends ConsumerWidget {
     final accentInk = isIced ? c.brandIce : c.brandTerracottaInk;
     final accentTint = isIced ? c.tintIce : c.tintTerracotta;
 
-    // Matching recipes for the selected Hot / Iced mode right on Beranda!
     final modeRecipes =
         state.recipes.where((r) => r.mode == state.draft.mode).toList();
     final displayRecipes =
@@ -86,408 +83,480 @@ class HomeScreen extends ConsumerWidget {
 
     final proCount = state.recipes.where((r) => r.isOfficial).length;
     final customCount = state.recipes.where((r) => !r.isOfficial).length;
+    final guideCount = state.guides.length;
 
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 10, 18, 102),
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 108),
           children: [
-            // 1. COMPACT, PROPORTIONAL EDITORIAL HEADER (Light & Dark consistent)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: c.surfaceCard,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: c.borderSubtle),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const PocketBrewMark(size: 38),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Mau seduh apa, ${state.prefs.userName}?',
-                          style: PocketTheme.ui(
-                            size: 16.5,
-                            weight: 800,
-                            height: 1.2,
-                            letterSpacing: -0.25,
-                            color: c.textPrimary,
-                          ),
+            // 1. SEAMLESS EDITORIAL TOP BAR (Flows naturally into the Launchpad!)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const PocketBrewMark(size: 38),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _greeting(),
+                        style: PocketTheme.ui(
+                          size: 11.5,
+                          weight: 600,
+                          color: c.textTertiary,
                         ),
-                        const SizedBox(height: 3),
-                        PocketTapScale(
-                          onTap: () => context.go('/gear'),
-                          pressedScale: 0.97,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: accent,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  '${_greeting()} · ${state.activeGrinder.model} · ${_shortDripperName(state.activeDripper.name)}',
-                                  style: PocketTheme.ui(
-                                    size: 11.2,
-                                    weight: 600,
-                                    height: 1.25,
-                                    color: c.textSecondary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              PocketIcon(
-                                PocketIconType.chevronRight,
-                                size: 12,
-                                color: c.textTertiary,
-                              ),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        'Mau seduh apa, ${state.prefs.userName}?',
+                        style: PocketTheme.ui(
+                          size: 18.5,
+                          weight: 800,
+                          height: 1.18,
+                          letterSpacing: -0.35,
+                          color: c.textPrimary,
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PocketTapScale(
+                  onTap: () => context.push('/settings'),
+                  pressedScale: 0.92,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: c.surfaceCard,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: c.borderSubtle),
+                    ),
+                    alignment: Alignment.center,
+                    child: PocketIcon(
+                      PocketIconType.sliders,
+                      size: 18,
+                      color: c.textPrimary,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  PocketTapScale(
-                    onTap: () => context.push('/settings'),
-                    pressedScale: 0.92,
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: c.surfaceElevated,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: c.borderSubtle),
-                      ),
-                      alignment: Alignment.center,
-                      child: PocketIcon(
-                        PocketIconType.sliders,
-                        size: 17,
-                        color: c.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
-            // 2. HERO SHORTCUT LAUNCHPAD CARD (Mode + Active Bean + Quick Method Picker + Launch!)
-            PocketEntrance(
-              delayMs: 0,
-              child: PocketCard(
-                padding: const EdgeInsets.all(16),
-                radius: 26,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            // Connected Active Setup Ribbon (1-tap jump to Alat Seduh)
+            PocketTapScale(
+              onTap: () => context.go('/gear'),
+              pressedScale: 0.985,
+              child: AnimatedContainer(
+                duration: PocketCurves.normal,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: c.surfaceCard.withValues(alpha: c.isDark ? 0.72 : 0.9),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: accent.withValues(alpha: c.isDark ? 0.28 : 0.20),
+                  ),
+                ),
+                child: Row(
                   children: [
-                    // Step A: Smooth Sliding Mode Switcher (Hot V60 <-> Japanese Iced)
-                    _HomeModeSwitch(
-                      isIced: isIced,
-                      onSelectHot: () {
-                        HapticFeedback.selectionClick();
-                        notifier.selectBrewMode(BrewMode.hot);
-                      },
-                      onSelectIced: () {
-                        HapticFeedback.selectionClick();
-                        notifier.selectBrewMode(BrewMode.iced);
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Step B: Active Bean Summary + Freshness Badge + Ganti biji
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            switchInCurve: PocketCurves.smoothOut,
-                            child: SizedBox(
-                              key: ValueKey(heroBean?.id ?? 'free'),
-                              width: double.infinity,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (heroStatus != null) ...[
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: c.tintSage,
-                                        borderRadius:
-                                            BorderRadius.circular(999),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 5.5,
-                                            height: 5.5,
-                                            decoration: BoxDecoration(
-                                              color: c.brandSage,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 5),
-                                          Flexible(
-                                            child: Text(
-                                              heroStatus.badgeText,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: PocketTheme.ui(
-                                                size: 10.5,
-                                                weight: 700,
-                                                color: c.brandSage,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                  ],
-                                  Text(
-                                    heroBean?.name ?? 'Seduhan Bebas (V60)',
-                                    style: PocketTheme.ui(
-                                      size: 19.5,
-                                      weight: 800,
-                                      height: 1.2,
-                                      letterSpacing: -0.25,
-                                      color: c.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    heroBean != null
-                                        ? '${heroBean.process} · ${heroBean.roastLevel.shortLabel} · ${heroBean.remainingG.round()}g${heroBean.tastingNotes.isNotEmpty ? ' · ${heroBean.tastingNotes.take(2).join(', ')}' : ''}'
-                                        : state.activeRecipe.name,
-                                    style: PocketTheme.ui(
-                                      size: 11.8,
-                                      weight: 500,
-                                      height: 1.35,
-                                      color: c.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        PocketPill(
-                          label: 'Ganti biji',
-                          height: 30,
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          padding: const EdgeInsets.symmetric(horizontal: 11),
-                          backgroundColor: accentTint,
-                          foregroundColor: accentInk,
-                          onTap: () => showBeanPickerSheet(context, ref),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Step C: Quick Method / Recipe Picker right inside Beranda!
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Pilih Metode',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: PocketTheme.ui(
-                              size: 12,
-                              weight: 700,
-                              color: c.textSecondary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        PocketTapScale(
-                          onTap: () => context.push('/methods'),
-                          child: Text(
-                            'Semua resep →',
-                            style: PocketTheme.ui(
-                              size: 11.5,
-                              weight: 700,
-                              color: accentInk,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 7),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: displayRecipes.map((r) {
-                          final active = r.id == state.activeRecipe.id;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 7),
-                            child: PocketTapScale(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                notifier.selectRecipe(
-                                  r.id,
-                                  forceMode: state.draft.mode,
-                                );
-                              },
-                              child: AnimatedContainer(
-                                duration: PocketCurves.fast,
-                                curve: PocketCurves.smoothOut,
-                                height: 34,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: active
-                                      ? accent
-                                      : (c.isDark
-                                          ? c.surfaceElevated
-                                          : c.surfaceCanvas),
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(
-                                    color: active ? accent : c.borderSubtle,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  _shortMethodChipName(r),
-                                  maxLines: 1,
-                                  style: PocketTheme.ui(
-                                    size: 12,
-                                    weight: active ? 700 : 600,
-                                    color: active
-                                        ? c.textOnAccent
-                                        : c.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 13),
-
-                    // Step D: Live 4-KPI Brew Preview Strip
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 11,
-                        horizontal: 8,
-                      ),
+                    AnimatedContainer(
+                      duration: PocketCurves.normal,
+                      width: 8,
+                      height: 8,
                       decoration: BoxDecoration(
-                        color: c.isDark ? c.surfaceElevated : c.surfaceCanvas,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          _HeroKpi(
-                            label: 'Giling',
-                            value: '${state.draft.clickSetting} klik',
-                            valueColor: accentInk,
-                          ),
-                          _HeroKpi(
-                            label: 'Suhu',
-                            value: BrewRecipeScaler.formatTemp(
-                              plan.tempC,
-                              state.prefs.tempUnit,
-                            ),
-                          ),
-                          _HeroKpi(
-                            label: isIced ? 'Cairan' : 'Air',
-                            value: BrewRecipeScaler.formatLiquidCompact(
-                              plan.totalLiquidG,
-                              state.prefs.unitMode,
-                            ),
-                          ),
-                          _HeroKpi(
-                            label: 'Tahap',
-                            value: '${plan.stages.length} tuang',
-                            isMono: false,
-                          ),
-                        ],
+                        color: accent,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(height: 13),
-
-                    // Step E: Direct Launch CTA + Secondary Edit Tahapan
-                    PocketButton(
-                      label: isIced
-                          ? 'Seduh Japanese Iced Sekarang'
-                          : 'Seduh Hot V60 Sekarang',
-                      pocketIcon: isIced
-                          ? PocketIconType.snowflake
-                          : PocketIconType.flame,
-                      iconSize: 16,
-                      backgroundColor: accent,
-                      foregroundColor: c.textOnAccent,
-                      height: 50,
-                      fontSize: 14,
-                      fontWeight: 700,
-                      onTap: () => context.go('/brew'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Alat aktif: ${state.activeGrinder.model} · ${_shortDripperName(state.activeDripper.name)}',
+                        style: PocketTheme.ui(
+                          size: 12,
+                          weight: 700,
+                          color: c.textSecondary,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    PocketButton(
-                      label: 'Edit Tahapan Seduh',
-                      pocketIcon: PocketIconType.edit,
-                      iconSize: 14.5,
-                      backgroundColor: c.surfaceElevated,
-                      foregroundColor: c.textPrimary,
-                      height: 38,
-                      fontSize: 12.2,
-                      fontWeight: 600,
-                      onTap: () => context.push('/brew/stages'),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Ubah',
+                      style: PocketTheme.ui(
+                        size: 11.5,
+                        weight: 800,
+                        color: accentInk,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    PocketIcon(
+                      PocketIconType.chevronRight,
+                      size: 13,
+                      color: accentInk,
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // 3. STOK BIJI DI RUMAH
+            // 2. HERO LIVING LAUNCHPAD CARD (Animated Aroma/Ice Atmosphere!)
+            PocketEntrance(
+              delayMs: 0,
+              child: AnimatedContainer(
+                duration: PocketCurves.normal,
+                decoration: BoxDecoration(
+                  color: c.surfaceCard,
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: accent.withValues(alpha: c.isDark ? 0.34 : 0.22),
+                    width: 1.15,
+                  ),
+                  boxShadow: c.isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.08),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                ),
+                child: BrewAtmosphereBackdrop(
+                  isIced: isIced,
+                  borderRadius: 25,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Step A: Smooth Sliding Mode Switcher (Hot V60 <-> Japanese Iced)
+                        _HomeModeSwitch(
+                          isIced: isIced,
+                          onSelectHot: () {
+                            HapticFeedback.selectionClick();
+                            notifier.selectBrewMode(BrewMode.hot);
+                          },
+                          onSelectIced: () {
+                            HapticFeedback.selectionClick();
+                            notifier.selectBrewMode(BrewMode.iced);
+                          },
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Step B: Active Coffee Bean Block + Ganti kopi
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 240),
+                                switchInCurve: PocketCurves.smoothOut,
+                                child: SizedBox(
+                                  key: ValueKey(heroBean?.id ?? 'free'),
+                                  width: double.infinity,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (heroStatus != null) ...[
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 9,
+                                            vertical: 3.5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: heroStatus.isLastCupAlert
+                                                ? c.tintHoney
+                                                : c.tintSage,
+                                            borderRadius:
+                                                BorderRadius.circular(999),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 6,
+                                                height: 6,
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      heroStatus.isLastCupAlert
+                                                          ? c.brandHoney
+                                                          : c.brandSage,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Flexible(
+                                                child: Text(
+                                                  heroStatus.badgeText,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: PocketTheme.ui(
+                                                    size: 10.8,
+                                                    weight: 700,
+                                                    color: heroStatus
+                                                            .isLastCupAlert
+                                                        ? c.brandHoney
+                                                        : c.brandSage,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 7),
+                                      ],
+                                      Text(
+                                        heroBean?.name ?? 'Seduhan Bebas (V60)',
+                                        style: PocketTheme.ui(
+                                          size: 20,
+                                          weight: 800,
+                                          height: 1.2,
+                                          letterSpacing: -0.3,
+                                          color: c.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        heroBean != null
+                                            ? '${heroBean.process} · ${heroBean.roastLevel.shortLabel} · ${heroBean.remainingG.round()}g${heroBean.tastingNotes.isNotEmpty ? ' · ${heroBean.tastingNotes.take(2).join(', ')}' : ''}'
+                                            : state.activeRecipe.name,
+                                        style: PocketTheme.ui(
+                                          size: 12,
+                                          weight: 500,
+                                          height: 1.38,
+                                          color: c.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            PocketPill(
+                              label: 'Ganti kopi',
+                              height: 32,
+                              fontSize: 11.5,
+                              fontWeight: 800,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              backgroundColor: accentTint,
+                              foregroundColor: accentInk,
+                              onTap: () => showBeanPickerSheet(context, ref),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Step C: Quick Method Picker right inside Launchpad
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Pilih Metode',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: PocketTheme.ui(
+                                  size: 12,
+                                  weight: 700,
+                                  color: c.textSecondary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            PocketTapScale(
+                              onTap: () => context.push('/methods'),
+                              child: Text(
+                                'Semua resep →',
+                                style: PocketTheme.ui(
+                                  size: 11.8,
+                                  weight: 800,
+                                  color: accentInk,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: displayRecipes.map((r) {
+                              final active = r.id == state.activeRecipe.id;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 7),
+                                child: PocketTapScale(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    notifier.selectRecipe(
+                                      r.id,
+                                      forceMode: state.draft.mode,
+                                    );
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: PocketCurves.fast,
+                                    curve: PocketCurves.smoothOut,
+                                    height: 34,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: active
+                                          ? accent
+                                          : (c.isDark
+                                              ? c.surfaceElevated
+                                              : c.surfaceCanvas),
+                                      borderRadius: BorderRadius.circular(999),
+                                      border: Border.all(
+                                        color: active ? accent : c.borderSubtle,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      _shortMethodChipName(r),
+                                      maxLines: 1,
+                                      style: PocketTheme.ui(
+                                        size: 12,
+                                        weight: active ? 700 : 600,
+                                        color: active
+                                            ? c.textOnAccent
+                                            : c.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 13),
+
+                        // Step D: Live Animated 4-KPI Brew Preview Strip
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 11,
+                            horizontal: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: c.isDark
+                                ? c.surfaceElevated.withValues(alpha: 0.92)
+                                : c.surfaceCanvas.withValues(alpha: 0.94),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: c.borderSubtle),
+                          ),
+                          child: Row(
+                            children: [
+                              _HeroKpi(
+                                label: 'Giling',
+                                value: '${state.draft.clickSetting} klik',
+                                valueColor: accentInk,
+                              ),
+                              _HeroKpi(
+                                label: 'Suhu',
+                                value: BrewRecipeScaler.formatTemp(
+                                  plan.tempC,
+                                  state.prefs.tempUnit,
+                                ),
+                              ),
+                              _HeroKpi(
+                                label: isIced ? 'Air + Es' : 'Air',
+                                value: isIced
+                                    ? '${plan.hotWaterG.round()}+${plan.iceG.round()}g'
+                                    : BrewRecipeScaler.formatLiquidCompact(
+                                        plan.totalLiquidG,
+                                        state.prefs.unitMode,
+                                      ),
+                              ),
+                              _HeroKpi(
+                                label: 'Tahap',
+                                value: '${plan.stages.length} tuang',
+                                isMono: false,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Step E: Launch CTA + Edit Tahapan
+                        PocketButton(
+                          label: isIced
+                              ? 'Seduh Japanese Iced Sekarang'
+                              : 'Seduh Hot V60 Sekarang',
+                          pocketIcon: isIced
+                              ? PocketIconType.snowflake
+                              : PocketIconType.flame,
+                          iconSize: 16.5,
+                          backgroundColor: accent,
+                          foregroundColor: c.textOnAccent,
+                          height: 50,
+                          fontSize: 14,
+                          fontWeight: 800,
+                          onTap: () => context.go('/brew'),
+                        ),
+                        const SizedBox(height: 8),
+                        PocketButton(
+                          label: 'Edit Tahapan Seduh',
+                          pocketIcon: PocketIconType.edit,
+                          iconSize: 14.5,
+                          backgroundColor: c.surfaceElevated,
+                          foregroundColor: c.textPrimary,
+                          height: 39,
+                          fontSize: 12.4,
+                          fontWeight: 700,
+                          onTap: () => context.push('/brew/stages'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // 3. STOK KOPI DI RUMAH (Cohesive Equal-Height Editorial Cards)
             PocketEntrance(
               delayMs: 55,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   PocketSectionHeader(
-                    title: 'Stok Biji di Rumah',
+                    title: 'Stok Kopi di Rumah',
                     actionLabel: 'Semua (${activeBeans.length}) →',
                     onAction: () => context.go('/beans'),
                   ),
                   const SizedBox(height: 10),
                   if (activeBeans.isEmpty)
                     PocketCard(
-                      radius: 18,
+                      radius: 20,
                       onTap: () => context.push('/beans/add'),
                       child: Row(
                         children: [
-                          PocketIcon(
-                            PocketIconType.bean,
-                            size: 20,
-                            color: c.brandTerracotta,
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: c.tintTerracotta,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.center,
+                            child: PocketIcon(
+                              PocketIconType.bean,
+                              size: 19,
+                              color: c.brandTerracottaInk,
+                            ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 11),
                           Expanded(
                             child: Text(
-                              'Belum ada biji tercatat — tambah kantong pertamamu.',
+                              'Belum ada biji kopi tercatat — tambah kantong pertamamu.',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
@@ -495,99 +564,112 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     )
                   else
-                    Row(
-                      children: activeBeans.take(2).map((b) {
-                        final st = BeanRestingCalculator.evaluate(
-                          bean: b,
-                          prefs: state.prefs,
-                        );
-                        final isAlert = st.isLastCupAlert;
-                        final isFirst = b == activeBeans.first;
-                        return Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              right: isFirst && activeBeans.length > 1 ? 10 : 0,
-                            ),
-                            child: PocketCard(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 13,
-                                vertical: 12,
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: activeBeans.take(2).map((b) {
+                          final st = BeanRestingCalculator.evaluate(
+                            bean: b,
+                            prefs: state.prefs,
+                          );
+                          final isAlert = st.isLastCupAlert;
+                          final isFirst = b == activeBeans.first;
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right:
+                                    isFirst && activeBeans.length > 1 ? 10 : 0,
                               ),
-                              radius: 18,
-                              backgroundColor:
-                                  isAlert ? c.tintHoney : c.surfaceCard,
-                              elevated: false,
-                              onTap: () => context.push('/beans/${b.id}'),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          b.name,
-                                          maxLines: 2,
-                                          style: PocketTheme.ui(
-                                            size: 13,
-                                            weight: 700,
-                                            height: 1.2,
-                                            color: c.textPrimary,
+                              child: PocketCard(
+                                padding: const EdgeInsets.all(13),
+                                radius: 20,
+                                backgroundColor:
+                                    isAlert ? c.tintHoney : c.surfaceCard,
+                                borderColor: isAlert
+                                    ? c.brandHoney.withValues(alpha: 0.32)
+                                    : c.borderSubtle,
+                                elevated: false,
+                                onTap: () => context.push('/beans/${b.id}'),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            b.name,
+                                            maxLines: 2,
+                                            style: PocketTheme.ui(
+                                              size: 13.2,
+                                              weight: 800,
+                                              height: 1.22,
+                                              color: c.textPrimary,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        isAlert
-                                            ? '${b.remainingG.round()}g!'
-                                            : '${b.remainingG.round()}g',
-                                        style: PocketTheme.mono(
-                                          size: 12,
-                                          weight: FontWeight.w700,
-                                          color: isAlert
-                                              ? c.brandHoney
-                                              : c.brandSage,
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '${b.remainingG.round()}g',
+                                          style: PocketTheme.mono(
+                                            size: 12.2,
+                                            weight: FontWeight.w800,
+                                            color: isAlert
+                                                ? c.brandHoney
+                                                : c.brandSage,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 7),
-                                  _SmoothStockBar(
-                                    fraction: st.stockFraction,
-                                    trackColor: c.isDark && isAlert
-                                        ? c.brandHoney.withValues(alpha: 0.22)
-                                        : c.surfaceSubtle,
-                                    fillColor:
-                                        isAlert ? c.brandHoney : c.brandSage,
-                                  ),
-                                  const SizedBox(height: 7),
-                                  Text(
-                                    isAlert
-                                        ? 'Stok hampir habis · Koreksi →'
-                                        : st.badgeText,
-                                    style: PocketTheme.ui(
-                                      size: 10.8,
-                                      weight: isAlert ? 600 : 500,
-                                      height: 1.25,
-                                      color: isAlert
-                                          ? c.brandHoney
-                                          : c.textTertiary,
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      '${b.process} · ${b.roastLevel.shortLabel}',
+                                      style: PocketTheme.ui(
+                                        size: 10.8,
+                                        weight: 500,
+                                        color: c.textTertiary,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    const SizedBox(height: 9),
+                                    AnimatedCoffeeStockBar(
+                                      fraction: st.stockFraction,
+                                      height: 5.5,
+                                      trackColor: c.isDark && isAlert
+                                          ? c.brandHoney.withValues(alpha: 0.22)
+                                          : c.surfaceElevated,
+                                      fillColor:
+                                          isAlert ? c.brandHoney : c.brandSage,
+                                    ),
+                                    const SizedBox(height: 7),
+                                    Text(
+                                      isAlert
+                                          ? 'Hampir habis · Cek →'
+                                          : st.badgeText,
+                                      style: PocketTheme.ui(
+                                        size: 10.8,
+                                        weight: 700,
+                                        height: 1.25,
+                                        color: isAlert
+                                            ? c.brandHoney
+                                            : c.brandSage,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                      ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 18),
 
-            // 4. EKSPLORASI & PANDUAN
+            // 4. EKSPLORASI & PANDUAN (Matching Cohesive Bento Pair)
             PocketEntrance(
               delayMs: 110,
               child: Column(
@@ -595,178 +677,193 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   const PocketSectionHeader(title: 'Eksplorasi & Panduan'),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: PocketCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 13,
-                          ),
-                          radius: 20,
-                          elevated: false,
-                          onTap: () => context.push('/methods'),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: c.tintTerracotta,
-                                  borderRadius: BorderRadius.circular(11),
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: PocketCard(
+                            padding: const EdgeInsets.all(14),
+                            radius: 20,
+                            elevated: false,
+                            onTap: () => context.push('/methods'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: c.tintTerracotta,
+                                    borderRadius: BorderRadius.circular(11),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: PocketIcon(
+                                    PocketIconType.recipe,
+                                    size: 17,
+                                    color: c.brandTerracottaInk,
+                                  ),
                                 ),
-                                alignment: Alignment.center,
-                                child: PocketIcon(
-                                  PocketIconType.recipe,
-                                  size: 16,
-                                  color: c.brandTerracottaInk,
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Metode & Resep',
+                                  style: PocketTheme.ui(
+                                    size: 13.8,
+                                    weight: 800,
+                                    color: c.textPrimary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Metode & Resep',
-                                style: PocketTheme.ui(
-                                  size: 13.5,
-                                  weight: 700,
-                                  color: c.textPrimary,
+                                const SizedBox(height: 3),
+                                Text(
+                                  '$proCount resep pro · $customCount buatanmu',
+                                  style: PocketTheme.ui(
+                                    size: 11.5,
+                                    weight: 500,
+                                    height: 1.32,
+                                    color: c.textSecondary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '$proCount resep pro · $customCount buatanmu',
-                                style: PocketTheme.ui(
-                                  size: 11.5,
-                                  weight: 400,
-                                  height: 1.3,
-                                  color: c.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: PocketCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 13,
-                          ),
-                          radius: 20,
-                          backgroundColor: c.tintSage,
-                          elevated: false,
-                          onTap: () => context.push('/learn'),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: c.surfaceCard,
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
-                                alignment: Alignment.center,
-                                child: PocketIcon(
-                                  PocketIconType.book,
-                                  size: 16,
-                                  color: c.brandSage,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Belajar Seduh',
-                                style: PocketTheme.ui(
-                                  size: 13.5,
-                                  weight: 700,
-                                  color: c.brandSage,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Biji, tuangan & alat →',
-                                style: PocketTheme.ui(
-                                  size: 11.5,
-                                  weight: 500,
-                                  height: 1.3,
-                                  color: c.textPrimary,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: PocketCard(
+                            padding: const EdgeInsets.all(14),
+                            radius: 20,
+                            backgroundColor: c.tintSage,
+                            borderColor: c.brandSage.withValues(alpha: 0.25),
+                            elevated: false,
+                            onTap: () => context.push('/learn'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: c.surfaceCard,
+                                    borderRadius: BorderRadius.circular(11),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: PocketIcon(
+                                    PocketIconType.book,
+                                    size: 17,
+                                    color: c.brandSage,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Belajar Seduh',
+                                  style: PocketTheme.ui(
+                                    size: 13.8,
+                                    weight: 800,
+                                    color: c.brandSage,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '$guideCount materi pro · Roda Rasa →',
+                                  style: PocketTheme.ui(
+                                    size: 11.5,
+                                    weight: 600,
+                                    height: 1.32,
+                                    color: c.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
-            // 5. SEDUHAN TERAKHIR RECAP
+            // 5. SEDUHAN TERAKHIR (Mode-Differentiated Hot vs Iced Recap)
             if (latestLog != null)
               PocketEntrance(
                 delayMs: 155,
-                child: PocketCard(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 11,
-                  ),
-                  radius: 18,
-                  elevated: false,
-                  onTap: () => context.push('/log/${latestLog.id}'),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: c.tintHoney,
-                          borderRadius: BorderRadius.circular(11),
+                child: () {
+                  final logIced = latestLog.mode == BrewMode.iced;
+                  final logAccent =
+                      logIced ? c.brandIce : c.brandTerracottaInk;
+                  final logTint = logIced ? c.tintIce : c.tintTerracotta;
+                  return PocketCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    radius: 20,
+                    borderColor: logAccent.withValues(alpha: 0.22),
+                    elevated: false,
+                    onTap: () => context.push('/log/${latestLog.id}'),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: logTint,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: PocketIcon(
+                            logIced
+                                ? PocketIconType.snowflake
+                                : PocketIconType.flame,
+                            size: 18,
+                            color: logAccent,
+                          ),
                         ),
-                        alignment: Alignment.center,
-                        child: PocketIcon(
-                          PocketIconType.starFilled,
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'Terakhir · ${latestLog.beanName}',
+                                      style: PocketTheme.ui(
+                                        size: 13.2,
+                                        weight: 700,
+                                        height: 1.25,
+                                        color: c.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                logIced
+                                    ? '${latestLog.mode.shortBadge} · ${latestLog.hotWaterG.round()} ml + ${latestLog.iceG.round()}g es · ★ ${latestLog.rating.toStringAsFixed(1)}'
+                                    : '${latestLog.mode.shortBadge} · ${latestLog.clickSetting} klik · ${BrewRecipeScaler.formatLiquidCompact(latestLog.totalLiquidG, state.prefs.unitMode)} · ★ ${latestLog.rating.toStringAsFixed(1)}',
+                                style: PocketTheme.mono(
+                                  size: 11,
+                                  color: c.textSecondary,
+                                  weight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        PocketIcon(
+                          PocketIconType.chevronRight,
                           size: 16,
-                          color: c.brandHoney,
+                          color: c.textTertiary,
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Terakhir · ${latestLog.beanName} (${latestLog.mode.shortBadge})',
-                              style: PocketTheme.ui(
-                                size: 13,
-                                weight: 600,
-                                height: 1.25,
-                                color: c.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${latestLog.clickSetting} klik · ${BrewRecipeScaler.formatLiquidCompact(latestLog.totalLiquidG, state.prefs.unitMode)} · ${BrewRecipeScaler.formatShortDuration(latestLog.actualDrawdownSec)} · ★ ${latestLog.rating.toStringAsFixed(1)}',
-                              style: PocketTheme.mono(
-                                size: 11,
-                                color: c.textSecondary,
-                                weight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      PocketIcon(
-                        PocketIconType.chevronRight,
-                        size: 16,
-                        color: c.textTertiary,
-                      ),
-                    ],
-                  ),
-                ),
+                      ],
+                    ),
+                  );
+                }(),
               ),
           ],
         ),
@@ -814,7 +911,7 @@ class _HomeModeSwitch extends StatelessWidget {
                       : [
                           BoxShadow(
                             color:
-                                const Color(0xFF1F1915).withValues(alpha: 0.07),
+                                const Color(0xFF1F1915).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -905,44 +1002,6 @@ class _HomeModeSwitch extends StatelessWidget {
   }
 }
 
-class _SmoothStockBar extends StatelessWidget {
-  const _SmoothStockBar({
-    required this.fraction,
-    required this.trackColor,
-    required this.fillColor,
-  });
-
-  final double fraction;
-  final Color trackColor;
-  final Color fillColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final safeFrac = fraction.clamp(0.06, 1.0);
-    return Container(
-      height: 5,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: trackColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      alignment: Alignment.centerLeft,
-      child: AnimatedFractionallySizedBox(
-        duration: PocketCurves.gentle,
-        curve: PocketCurves.smoothOut,
-        widthFactor: safeFrac,
-        child: Container(
-          height: 5,
-          decoration: BoxDecoration(
-            color: fillColor,
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _HeroKpi extends StatelessWidget {
   const _HeroKpi({
     required this.label,
@@ -969,29 +1028,43 @@ class _HeroKpi extends StatelessWidget {
             maxLines: 1,
             textAlign: TextAlign.center,
             style: PocketTheme.ui(
-              size: 10,
-              weight: 500,
+              size: 10.2,
+              weight: 600,
               color: c.textTertiary,
             ),
           ),
-          const SizedBox(height: 2),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              maxLines: 1,
-              textAlign: TextAlign.center,
-              style: isMono
-                  ? PocketTheme.mono(
-                      size: 13.5,
-                      weight: FontWeight.w700,
-                      color: valueColor ?? c.textPrimary,
-                    )
-                  : PocketTheme.ui(
-                      size: 13.5,
-                      weight: 700,
-                      color: valueColor ?? c.textPrimary,
-                    ),
+          const SizedBox(height: 3),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.25),
+                  end: Offset.zero,
+                ).animate(anim),
+                child: child,
+              ),
+            ),
+            child: FittedBox(
+              key: ValueKey(value),
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                style: isMono
+                    ? PocketTheme.mono(
+                        size: 13.5,
+                        weight: FontWeight.w800,
+                        color: valueColor ?? c.textPrimary,
+                      )
+                    : PocketTheme.ui(
+                        size: 13.5,
+                        weight: 800,
+                        color: valueColor ?? c.textPrimary,
+                      ),
+              ),
             ),
           ),
         ],

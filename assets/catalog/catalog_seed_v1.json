@@ -371,68 +371,76 @@
   ],
   "guides": [
     {
+      "id": "beans-origins",
+      "title": "Ensiklopedia Biji Kopi (Wajib Baca)",
+      "subtitle": "Spesies · Ketinggian · 5 Proses · Sangrai · Resting & Freezer",
+      "read_minutes": 5,
+      "tags": ["Arabica vs Robusta", "5 Proses Panen", "Light–Dark Roast", "Resting"],
+      "category": "beans"
+    },
+    {
       "id": "brew-basics",
-      "title": "Dasar Seduh: Rasio, Gilingan & Suhu",
-      "subtitle": "Wajib Pemula · Pondasi V60 & Iced",
-      "read_minutes": 3,
-      "tags": ["Rasio 1:15–1:17", "Ukuran Gilingan", "Suhu & Bloom"],
+      "title": "Ilmu Ekstraksi & Rasio Emas (SCA)",
+      "subtitle": "Rasio 1:15–1:17 · Titik Manis 18–22% · Gilingan, Suhu & Bloom",
+      "read_minutes": 4,
+      "tags": ["Standar SCA", "Kurva Ekstraksi", "Suhu & Bloom"],
       "category": "basics"
     },
     {
       "id": "pour-technique",
-      "title": "Teknik Penuangan (Simulasi Animasi)",
-      "subtitle": "Spiral · Center · Pulse · Osmotic · Swirl",
+      "title": "Teknik Tuang & Agitasi (Animasi 5 Pola)",
+      "subtitle": "Spiral · Center · Pulse · Osmotic · Swirl & Tinggi Tuangan",
       "read_minutes": 4,
-      "tags": ["Spiral", "Center & Pulse", "Osmotic", "Rao Spin"],
+      "tags": ["Simulasi 60fps", "Spiral & Pulse", "Osmotic", "Rao Spin"],
       "category": "pour"
     },
     {
       "id": "flavor-wheel",
       "title": "Roda Rasa Kopi (SCA Flavor Wheel)",
-      "subtitle": "9 Kategori Utama · 85+ Notes Rasa Dunia Kopi",
+      "subtitle": "Eksplorasi 9 Kategori Utama & 85+ Notes Rasa + Cara Cupping",
       "read_minutes": 4,
-      "tags": ["Fruity & Floral", "Sweet & Cocoa", "Spices", "9 Kategori SCA"],
+      "tags": ["9 Kategori SCA", "85+ Notes Rasa", "Panduan Pemula"],
       "category": "wheel"
     },
     {
       "id": "taste-troubleshoot",
-      "title": "Perbaiki Rasa: Asam vs Pahit",
-      "subtitle": "Panduan Cepat · Diagnosa Rasa di Lidah",
-      "read_minutes": 3,
-      "tags": ["Asam / Encer", "Pahit / Sepat", "Air Mampet"],
+      "title": "Diagnosa Rasa & Coffee Compass",
+      "subtitle": "Solusi Asam, Pahit, Encer, Channeling & Aturan 1 Variabel",
+      "read_minutes": 4,
+      "tags": ["Asam / Under", "Pahit / Over", "Filter Mampet"],
       "category": "troubleshoot"
     },
     {
-      "id": "beans-origins",
-      "title": "Karakter Biji & Daerah Asal",
-      "subtitle": "Origin · Washed vs Natural vs Honey",
-      "read_minutes": 3,
-      "tags": ["Ethiopia", "Kenya", "Colombia", "Gayo / Rempah"],
-      "category": "beans"
+      "id": "japanese-iced",
+      "title": "Panduan Japanese Iced / Flash Brew",
+      "subtitle": "Rasio Air Panas vs Es (70/30–60/40) · Gilingan & Urutan Es",
+      "read_minutes": 4,
+      "tags": ["Flash Brew", "Proporsi Es", "Es Duluan vs Akhir"],
+      "category": "iced"
     },
     {
-      "id": "water-storage",
-      "title": "Kualitas Air & Penyimpanan Biji",
-      "subtitle": "98% Kopi Adalah Air · Masa Resting Biji",
-      "read_minutes": 2,
-      "tags": ["Air Mineral 75–150 ppm", "Resting Biji", "Simpan Kedap"],
+      "id": "water-chemistry",
+      "title": "Kimia Air Seduh (Standar SCA)",
+      "subtitle": "98,5% Kopi Adalah Air · TDS 75–150 ppm · Mineral GH/KH",
+      "read_minutes": 3,
+      "tags": ["TDS 75–150 ppm", "Magnesium & Kalsium", "Pilih Air"],
       "category": "water"
     },
     {
-      "id": "dripper-types",
-      "title": "Mengenal Jenis & Bahan Dripper",
-      "subtitle": "V60 Cone · Switch · Kalita Flat · Origami",
-      "read_minutes": 3,
-      "tags": ["Cone 60°", "Flat-Bottom", "Plastik vs Keramik"],
+      "id": "dripper-filter",
+      "title": "Geometri Dripper & Kertas Filter",
+      "subtitle": "Cone vs Flat vs Hybrid · Bypass · Hario vs Cafec Abaca",
+      "read_minutes": 4,
+      "tags": ["V60 vs Kalita", "Plastik vs Keramik", "Aliran Filter"],
       "category": "dripper"
     },
     {
-      "id": "paper-filters",
-      "title": "Jenis Kertas Filter & Aliran Air",
-      "subtitle": "Hario · Cafec Abaca · T-90 · T-92",
-      "read_minutes": 2,
-      "tags": ["Aliran Cepat", "Aliran Lambat", "Bilas Filter"],
-      "category": "filter"
+      "id": "grinder-care",
+      "title": "Grinder, Burr & Perawatan Harian",
+      "subtitle": "Conical vs Flat Burr · Distribusi Fines · RDT & Kalibrasi",
+      "read_minutes": 3,
+      "tags": ["Conical vs Flat", "RDT Anti-Statis", "Zero Point"],
+      "category": "grinder"
     }
   ]
 }

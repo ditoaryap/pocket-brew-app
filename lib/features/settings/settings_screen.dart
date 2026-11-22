@@ -171,7 +171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                   // 2. Default Masa Paling Enak Biji Baru — User Configurable Global Default!
                   PocketSectionHeader(
-                    title: 'Default Masa Paling Enak Biji',
+                    title: 'Default Masa Paling Enak Kopi',
                     actionLabel: 'Atur →',
                     onAction: () => _openRestingDialog(context, ref),
                   ),
@@ -409,7 +409,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 6),
                         Text(
                           'Database Lokal Schema v${PocketVersion.dbSchemaVersion} (Dual-Slot Auto-Backup) · '
-                          '${state.beans.length} biji · ${state.logs.length} seduhan · '
+                          '${state.beans.length} kopi · ${state.logs.length} seduhan · '
                           '${state.recipes.where((r) => !r.isOfficial).length} resep custom',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),

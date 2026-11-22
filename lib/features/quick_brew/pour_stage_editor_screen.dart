@@ -1260,27 +1260,8 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
-                                                PocketPill(
-                                                  label: 'Info Pola',
-                                                  icon: Icons
-                                                      .info_outline_rounded,
-                                                  iconSize: 13.5,
-                                                  height: 26,
-                                                  fontSize: 10.8,
-                                                  fontWeight: 700,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 9,
-                                                  ),
-                                                  backgroundColor:
-                                                      c.tintTerracotta,
-                                                  foregroundColor:
-                                                      c.brandTerracottaInk,
-                                                  onTap: () =>
-                                                      showPourPatternGuideSheet(
-                                                    context,
-                                                    initialPattern: st.pattern,
-                                                  ),
+                                                PourInfoButton(
+                                                  pattern: st.pattern,
                                                 ),
                                               ],
                                             ),

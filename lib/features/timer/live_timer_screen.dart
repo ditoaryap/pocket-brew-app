@@ -1009,42 +1009,10 @@ class _LiveTimerScreenState extends ConsumerState<LiveTimerScreen>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  PocketTapScale(
-                    onTap: () => showPourPatternGuideSheet(
-                      context,
-                      initialPattern: plan.stages.isNotEmpty
-                          ? plan.stages.first.stage.pattern
-                          : PourPattern.spiral,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: c.tintTerracotta,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.play_circle_outline_rounded,
-                            size: 15,
-                            color: c.brandTerracottaInk,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Info Pola',
-                            style: PocketTheme.ui(
-                              size: 11.5,
-                              weight: 800,
-                              color: c.brandTerracottaInk,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  PourInfoButton(
+                    pattern: plan.stages.isNotEmpty
+                        ? plan.stages.first.stage.pattern
+                        : PourPattern.spiral,
                   ),
                 ],
               ),

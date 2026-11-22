@@ -2785,7 +2785,7 @@ class _PreBrewChecklistSheetState extends State<_PreBrewChecklistSheet> {
             : 'Siapkan minimal $hotLabel air panas (+ sedikit untuk bilas filter)',
       ),
       (
-        title: 'Timbang biji $doseLabel',
+        title: 'Timbang kopi $doseLabel',
         detail:
             '${widget.beanName ?? 'Biji kopi pilihan'} · Rasio ${widget.ratioLabel}',
       ),
@@ -3207,21 +3207,7 @@ class _SessionStageSheetState extends State<_SessionStageSheet> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                PocketPill(
-                  label: 'Info Pola',
-                  icon: Icons.info_outline_rounded,
-                  iconSize: 13.5,
-                  height: 26,
-                  fontSize: 10.8,
-                  fontWeight: 700,
-                  padding: const EdgeInsets.symmetric(horizontal: 9),
-                  backgroundColor: c.tintTerracotta,
-                  foregroundColor: c.brandTerracottaInk,
-                  onTap: () => showPourPatternGuideSheet(
-                    context,
-                    initialPattern: _pattern,
-                  ),
-                ),
+                PourInfoButton(pattern: _pattern),
               ],
             ),
             const SizedBox(height: 6),

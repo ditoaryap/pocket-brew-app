@@ -18,6 +18,28 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/id-ID/1.0.0/) 
 
 ---
 
+## [1.0.4+5] - 2026-11-23
+### Ditambahkan (Added)
+- **Animasi Atmosfer & Mikro-Interaksi Khas Kopi (`coffee_atmosphere.dart`)**:
+  - Menambahkan animasi *BrewAtmosphereBackdrop* di Beranda yang berubah mulus antara uap aroma kopi hangat (**Hot V60**) dan kristal es melayang (**Japanese Iced**), plus bar progres stok kopi beranimasi, indikator rasio Air Panas vs Es Batu, dan pengukur profil rasa beranimasi — seluruhnya ringan berbasis `CustomPainter` native tanpa membebani memori.
+- **Upgrade Total Kurikulum Belajar Seduh (9 Materi Standar SCA & WBrC)**:
+  - Memperbarui tampilan baca & memperluas materi menjadi **9 topik mendalam dan interaktif**: *Ensiklopedia Biji Kopi* (spesies, MASL, 5 proses pasca panen, simulator sangrai & resting, penyimpanan freezer), *Ilmu Ekstraksi & Rasio Emas SCA* (kurva interaktif 18–22%), *Teknik Tuang 5 Pola*, *Roda Rasa Kopi SCA*, *Diagnosa Rasa & Coffee Compass* (pemilih gejala interaktif), *Panduan Japanese Iced / Flash Brew* (simulator 70/30–60/40), *Kimia Air Seduh (TDS/Mg/Ca/KH)*, *Geometri Dripper & Kertas Filter*, serta *Grinder, Burr & RDT*.
+
+### Diubah / Disempurnakan (Changed)
+- **Redesign Beranda**:
+  - Menyatukan alur visual dari sapaan & pita alat aktif di atas langsung ke kartu utama **Launchpad Seduh** hingga kartu **Stok Kopi**, **Eksplorasi & Panduan**, dan **Seduhan Terakhir** agar terasa satu kesatuan yang rapi.
+- **Redesign Halaman Alat Seduh (Sticky Workbench — Bebas Bingung)**:
+  - Menghapus tombol **Simpan Setup Aktif** dan checklist yang membingungkan; pilihan alat kini tersimpan otomatis dengan status `Dipakai` yang tegas dan pita **Setup Aktif Saya** 3-slot (`Grinder | Dripper | Filter`) yang selalu menempel di bagian atas saat menggulir koleksi.
+- **Redesign Halaman Koleksi Kopi & Detail Kopi**:
+  - Menghapus angka `klik` grinder yang tidak relevan dari kartu kopi, menambahkan garis aksen level sangrai, chip *Notes Rasa Kemasan*, umur sangrai, dan bar stok beranimasi.
+- **Redesign Riwayat & Detail Seduhan (Pembeda Jelas Hot V60 vs Japanese Iced)**:
+  - Membedakan identitas visual **Hot V60** (*Terracotta*) dan **Japanese Iced** (*Glacier Ice*), serta menampilkan visual **Proporsi Air Panas vs Es Batu** beserta teknik es (*Es Duluan* vs *Seduh Dulu → Es*) secara jelas di daftar riwayat maupun detail seduhan.
+- **Perbaikan Tombol `Info Pola` & Konsistensi Istilah (`Kopi` / `Biji Kopi`)**:
+  - Membangun ulang komponen tombol `PourInfoButton` agar seragam, proporsional, dan rapi di semua layar.
+  - Menyeragamkan istilah navigasi & label menjadi **Kopi** / **Biji Kopi** (menghilangkan campur aduk `Beans` dan kata `Biji` yang ambigu).
+
+---
+
 ## [1.0.3+4] - 2026-11-23
 ### Ditambahkan (Added)
 - **Panduan Animasi 5 Teknik Tuangan (`Info Pola`)**:

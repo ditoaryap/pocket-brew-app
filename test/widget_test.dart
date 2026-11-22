@@ -17,7 +17,8 @@ void main() {
     expect(find.text('Japanese Iced'), findsWidgets);
     expect(find.text('Edit Tahapan Seduh'), findsOneWidget);
     expect(find.text('Beranda'), findsOneWidget);
-    expect(find.text('Beans'), findsOneWidget);
+    expect(find.text('Kopi'), findsOneWidget);
+    expect(find.text('Beans'), findsNothing);
     expect(find.text('Brew'), findsOneWidget);
     expect(find.text('Log'), findsOneWidget);
     expect(find.text('Alat'), findsOneWidget);

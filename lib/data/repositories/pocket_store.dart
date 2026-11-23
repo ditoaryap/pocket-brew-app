@@ -897,6 +897,9 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
     _persist(immediate: false);
   }
 
+  void setUserName(String name) =>
+      updatePrefs(state.prefs.copyWith(userName: name.trim()));
+
   void setUnitMode(UnitMode unit) =>
       updatePrefs(state.prefs.copyWith(unitMode: unit));
 
@@ -920,12 +923,9 @@ class PocketStoreNotifier extends Notifier<PocketAppState> {
       }
       return p;
     }).toList();
-    final trimmedName = userName?.trim();
     state = state.copyWith(
       prefs: state.prefs.copyWith(
-        userName: (trimmedName != null && trimmedName.isNotEmpty)
-            ? trimmedName
-            : state.prefs.userName,
+        userName: userName != null ? userName.trim() : state.prefs.userName,
         unitMode: unit,
         tempUnit: tempUnit,
         onboarded: true,

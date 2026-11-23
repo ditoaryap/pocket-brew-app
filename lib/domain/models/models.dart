@@ -744,7 +744,7 @@ class LearnGuide {
 
 class UserPrefs {
   const UserPrefs({
-    this.userName = 'Dito',
+    this.userName = '',
     this.unitMode = UnitMode.ml,
     this.tempUnit = TempUnit.celsius,
     this.themePref = AppThemePref.light,
@@ -823,7 +823,7 @@ class UserPrefs {
       );
 
   factory UserPrefs.fromJson(Map<String, dynamic> j) => UserPrefs(
-        userName: j['user_name'] as String? ?? 'Dito',
+        userName: (j['user_name'] as String? ?? '').trim(),
         unitMode: UnitMode.fromString(j['unit_mode'] as String?),
         tempUnit: TempUnit.fromString(j['temp_unit'] as String?),
         themePref: AppThemePref.fromString(j['theme_pref'] as String?),

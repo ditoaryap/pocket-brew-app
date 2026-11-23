@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ditoaryap/pocket-brew-app/releases/latest"><strong>Unduh APK Terbaru (v1.0.4)</strong></a>
+  <a href="https://github.com/ditoaryap/pocket-brew-app/releases/latest"><strong>Unduh APK Terbaru (v1.0.5)</strong></a>
   &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Catatan Perubahan</a>
 </p>
@@ -49,7 +49,7 @@ Semua perhitungan dilakukan langsung di perangkat — ringan, instan, dan tetap 
 ## Cara Pasang di Android
 
 1. Buka halaman [**GitHub Releases**](https://github.com/ditoaryap/pocket-brew-app/releases/latest).
-2. Di bagian **Assets**, unduh file **`pocket-brew-v1.0.4.apk`**.
+2. Di bagian **Assets**, unduh file **`pocket-brew-v1.0.5.apk`**.
 3. Buka file yang selesai diunduh lalu tekan **Install**. Jika diminta izin memasang dari browser/pengelola file, izinkan terlebih dahulu.
 
 ### Cara Update ke Versi Baru (Tanpa Kehilangan Data)
@@ -65,5 +65,5 @@ Pocket Brew tidak mengumpulkan data pribadi, tidak memerlukan login, dan tidak m
 ---
 
 <p align="center">
-  Dibuat dengan tenang untuk meja seduh rumahan · <a href="CHANGELOG.md">Lihat Changelog v1.0.4</a>
+  Dibuat dengan tenang untuk meja seduh rumahan · <a href="CHANGELOG.md">Lihat Changelog v1.0.5</a>
 </p>

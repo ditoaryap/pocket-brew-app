@@ -114,14 +114,25 @@ void main() {
     expect(find.byType(OnboardingScreen), findsOneWidget);
     expect(find.text('Siapkan meja seduhmu'), findsOneWidget);
     expect(find.text('Lewati dulu'), findsOneWidget);
+    expect(find.text('Nama Panggilan'), findsOneWidget);
     expect(find.text('1. Satuan Air & Suhu'), findsOneWidget);
     expect(find.text('2. Grinder yang Kamu Pakai'), findsOneWidget);
     expect(find.text('Preset Resmi ✓'), findsOneWidget);
     expect(find.text('3. Dripper Favorit'), findsOneWidget);
 
+    // Fill custom user nickname in Setup Awal -> live greeting preview updates!
+    await tester.enterText(find.byType(TextField).first, 'Raka');
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Sapaan di Beranda: "Mau seduh apa, Raka?"'),
+      findsOneWidget,
+    );
+
+    final onboardingScroll = find.byType(Scrollable).first;
     await tester.scrollUntilVisible(
       find.text('Aman dipakai tanpa internet & tanpa perlu akun'),
       150,
+      scrollable: onboardingScroll,
     );
     expect(
       find.text('Aman dipakai tanpa internet & tanpa perlu akun'),
@@ -129,7 +140,11 @@ void main() {
     );
 
     // Scroll back up to toggle unit & temp
-    await tester.scrollUntilVisible(find.text('1. Satuan Air & Suhu'), -150);
+    await tester.scrollUntilVisible(
+      find.text('1. Satuan Air & Suhu'),
+      -150,
+      scrollable: onboardingScroll,
+    );
     await tester.tap(find.text('g'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('°F'));
@@ -184,7 +199,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.text('Mau seduh apa, Raka?'), findsOneWidget);
     final st = container.read(pocketStoreProvider);
+    expect(st.prefs.userName, 'Raka');
     expect(st.prefs.unitMode, UnitMode.gram);
     expect(st.prefs.tempUnit, TempUnit.fahrenheit);
     expect(st.activeGrinder.id, '1zpresso-k-ultra');
@@ -199,7 +216,9 @@ void main() {
     final router = env.router;
 
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('Mau seduh apa, Dito?'), findsOneWidget);
+    // Fresh user with no nickname sees neutral greeting (NO hardcoded "Dito"!)
+    expect(find.text('Mau seduh apa hari ini?'), findsOneWidget);
+    expect(find.textContaining('Dito'), findsNothing);
     expect(find.textContaining('Meja Rumah'), findsNothing);
     expect(find.text('Ethiopia Guji Uraga'), findsWidgets);
     expect(find.text('Hot V60'), findsOneWidget);
@@ -720,13 +739,25 @@ void main() {
       final env = await pumpApp(tester);
       final router = env.router;
 
-      // 1. Settings screen has explicit Simpan CTA, Tes Suara, Hapus Data & Default Masa Paling Enak Kopi
+      // 1. Settings screen has Profil & Nama Panggilan, Simpan CTA, Tes Suara, Hapus Data & Default Masa Paling Enak Kopi
       router.push('/settings');
       await tester.pumpAndSettle();
+      expect(find.text('Profil & Nama Panggilan'), findsOneWidget);
       expect(find.text('Default Masa Paling Enak Kopi'), findsOneWidget);
-      expect(find.text('Tes Suara'), findsOneWidget);
       expect(find.text('Simpan & Kembali'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, 'Nadya');
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Sapaan di Beranda: "Mau seduh apa, Nadya?"'),
+        findsOneWidget,
+      );
       final settingsScroll = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.text('Tes Suara'),
+        200,
+        scrollable: settingsScroll,
+      );
+      expect(find.text('Tes Suara'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Hapus Data'),
         200,
@@ -744,6 +775,7 @@ void main() {
       await tester.tap(find.text('Simpan Pengaturan'));
       await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.text('Mau seduh apa, Nadya?'), findsOneWidget);
 
       // 2. Add Bean screen: structured Notes 1 / Notes 2 inputs (no comma separation!), single Berat Biji Saat Ini
       router.push('/beans/add');

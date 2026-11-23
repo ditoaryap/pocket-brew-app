@@ -25,6 +25,21 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _hasChanges = false;
+  late final TextEditingController _nameCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(
+      text: ref.read(pocketStoreProvider).prefs.userName,
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
 
   void _markDirty() {
     if (!_hasChanges) setState(() => _hasChanges = true);
@@ -91,6 +106,94 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
                 children: [
+                  // 0. Profil & Nama Panggilan
+                  const PocketSectionHeader(title: 'Profil & Nama Panggilan'),
+                  const SizedBox(height: 8),
+                  PocketCard(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _nameCtrl,
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.done,
+                          maxLength: 24,
+                          buildCounter: (
+                            _, {
+                            required currentLength,
+                            required isFocused,
+                            maxLength,
+                          }) =>
+                              null,
+                          onChanged: (v) {
+                            notifier.setUserName(v);
+                            _markDirty();
+                            setState(() {});
+                          },
+                          style: PocketTheme.ui(
+                            size: 13.8,
+                            weight: 700,
+                            color: c.textPrimary,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: c.surfaceElevated,
+                            prefixIcon: Icon(
+                              Icons.person_outline_rounded,
+                              size: 19,
+                              color: c.textTertiary,
+                            ),
+                            suffixIcon: _nameCtrl.text.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(
+                                      Icons.close_rounded,
+                                      size: 17,
+                                      color: c.textTertiary,
+                                    ),
+                                    onPressed: () {
+                                      _nameCtrl.clear();
+                                      notifier.setUserName('');
+                                      _markDirty();
+                                      setState(() {});
+                                    },
+                                  )
+                                : null,
+                            hintText: 'Tulis nama panggilanmu (opsional)...',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 11,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(13),
+                              borderSide: BorderSide(color: c.borderSubtle),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(13),
+                              borderSide: BorderSide(
+                                color: c.brandTerracotta,
+                                width: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          _nameCtrl.text.trim().isEmpty
+                              ? 'Sapaan di Beranda: "Mau seduh apa hari ini?"'
+                              : 'Sapaan di Beranda: "Mau seduh apa, ${_nameCtrl.text.trim()}?"',
+                          style: PocketTheme.ui(
+                            size: 11.5,
+                            weight: 600,
+                            color: c.brandSage,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // 1. Satuan & Pengukuran
                   const PocketSectionHeader(title: 'Satuan & Pengukuran'),
                   const SizedBox(height: 8),
@@ -583,7 +686,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 foregroundColor: c.textOnAccent,
                 height: 52,
                 onTap: () {
-                  notifier.updatePrefs(ref.read(pocketStoreProvider).prefs);
+                  notifier.updatePrefs(
+                    ref
+                        .read(pocketStoreProvider)
+                        .prefs
+                        .copyWith(userName: _nameCtrl.text.trim()),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Pengaturan berhasil disimpan ✓'),

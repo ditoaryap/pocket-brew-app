@@ -110,7 +110,9 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        'Mau seduh apa, ${state.prefs.userName}?',
+                        state.prefs.userName.trim().isEmpty
+                            ? 'Mau seduh apa hari ini?'
+                            : 'Mau seduh apa, ${state.prefs.userName.trim()}?',
                         style: PocketTheme.ui(
                           size: 18.5,
                           weight: 800,

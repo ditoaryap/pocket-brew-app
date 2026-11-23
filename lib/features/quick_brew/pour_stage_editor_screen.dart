@@ -444,7 +444,9 @@ class _PourStageEditorScreenState extends ConsumerState<PourStageEditorScreen> {
           ? 'custom-${const Uuid().v4().substring(0, 8)}'
           : base.id,
       name: name,
-      author: store.prefs.userName,
+      author: store.prefs.userName.trim().isNotEmpty
+          ? store.prefs.userName.trim()
+          : 'Custom',
       mode: _mode,
       badge: _mode == BrewMode.iced ? 'Japanese' : 'Custom',
       isOfficial: false,

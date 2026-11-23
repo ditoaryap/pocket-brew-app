@@ -24,6 +24,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  late final TextEditingController _nameCtrl;
   late UnitMode _unit;
   late TempUnit _temp;
   late String _grinderId;
@@ -49,10 +50,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void initState() {
     super.initState();
     final store = ref.read(pocketStoreProvider);
+    _nameCtrl = TextEditingController(text: store.prefs.userName);
     _unit = store.prefs.unitMode;
     _temp = store.prefs.tempUnit;
     _grinderId = store.activeProfile.grinderId;
     _dripperId = store.activeProfile.dripperId;
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _openAddCustomGear(String type) async {
@@ -177,6 +185,123 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 13),
+
+                  // Personal Name Card (Optional — zero hardcoded name!)
+                  PocketEntrance(
+                    delayMs: 25,
+                    child: PocketCard(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      radius: 20,
+                      elevated: false,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Nama Panggilan',
+                                  style: PocketTheme.ui(
+                                    size: 13.5,
+                                    weight: 700,
+                                    color: c.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              PocketPill(
+                                label: 'Opsional',
+                                backgroundColor: c.surfaceElevated,
+                                foregroundColor: c.textTertiary,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                height: 22,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 9),
+                          TextField(
+                            controller: _nameCtrl,
+                            textCapitalization: TextCapitalization.words,
+                            textInputAction: TextInputAction.done,
+                            maxLength: 24,
+                            buildCounter: (
+                              _, {
+                              required currentLength,
+                              required isFocused,
+                              maxLength,
+                            }) =>
+                                null,
+                            onChanged: (_) => setState(() {}),
+                            style: PocketTheme.ui(
+                              size: 13.5,
+                              weight: 600,
+                              color: c.textPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              filled: true,
+                              fillColor: c.surfaceElevated,
+                              prefixIcon: Icon(
+                                Icons.person_outline_rounded,
+                                size: 19,
+                                color: c.textTertiary,
+                              ),
+                              suffixIcon: _nameCtrl.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Icons.close_rounded,
+                                        size: 17,
+                                        color: c.textTertiary,
+                                      ),
+                                      onPressed: () {
+                                        _nameCtrl.clear();
+                                        setState(() {});
+                                      },
+                                    )
+                                  : null,
+                              hintText: 'Contoh: Raka, Nadya, Dito...',
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 11,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(13),
+                                borderSide: BorderSide(color: c.borderSubtle),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(13),
+                                borderSide: BorderSide(
+                                  color: c.brandTerracotta,
+                                  width: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            _nameCtrl.text.trim().isEmpty
+                                ? 'Dipakai untuk sapaan di Beranda — bisa diubah kapan saja di Pengaturan.'
+                                : 'Sapaan di Beranda: "Mau seduh apa, ${_nameCtrl.text.trim()}?"',
+                            style: PocketTheme.ui(
+                              size: 11.4,
+                              weight: 500,
+                              color: _nameCtrl.text.trim().isEmpty
+                                  ? c.textTertiary
+                                  : c.brandSage,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 13),
@@ -443,6 +568,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         tempUnit: _temp,
                         grinderId: _grinderId,
                         dripperId: _dripperId,
+                        userName: _nameCtrl.text,
                       );
                   context.go('/home');
                 },

@@ -18,6 +18,18 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/id-ID/1.0.0/) 
 
 ---
 
+## [1.0.5+6] - 2026-11-24
+### Ditambahkan (Added)
+- **Input Nama Panggilan di Setup Awal & Pengaturan**:
+  - Menambahkan kolom **Nama Panggilan (Opsional)** di layar **Setup Awal (`OnboardingScreen`)** agar setiap pengguna baru bisa mengisi namanya sendiri saat pertama kali membuka aplikasi.
+  - Menambahkan bagian **Profil & Nama Panggilan** di menu **Pengaturan (`SettingsScreen`)** lengkap dengan pratinjau sapaan Beranda langsung untuk mengganti atau mengosongkan nama kapan saja.
+
+### Diubah / Disempurnakan (Changed)
+- **Hapus Nama Default Hardcoded `"Dito"`**:
+  - Nama pengguna bawaan kini kosong secara default; jika tidak diisi, Beranda menyapa dengan netral (**`"Mau seduh apa hari ini?"`**) dan jika diisi akan menyapa sesuai nama pengguna (**`"Mau seduh apa, [Nama]?"`**).
+
+---
+
 ## [1.0.4+5] - 2026-11-23
 ### Ditambahkan (Added)
 - **Animasi Atmosfer & Mikro-Interaksi Khas Kopi (`coffee_atmosphere.dart`)**:
